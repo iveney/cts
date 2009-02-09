@@ -24,7 +24,7 @@ int main(int argc, char **argv){
 	}
 	ifp = fopen( argv[1], "r") ; 
 	printf("%d\n",InputFile(ifp));
-	check_input();
+	//check_input();
 	deferred_merge_embedding();
 
 	return 1;

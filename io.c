@@ -1,5 +1,5 @@
 #include "ds.h"
-
+#include "BufPlace.h"
 #include<stdio.h>
 #include<stdlib.h>
 #include<math.h>
@@ -17,6 +17,14 @@ extern VDDLIB	vddlib ;
 extern int SlewLimit; 
 extern int CapLimit ; 
 extern BLOCKAGE blockage;
+
+
+
+extern int num_node ; 
+extern int num_buffer; 
+extern int num_wire ; 
+extern int num_sinknode ; 
+extern int num_total_nodes ; 
 
 
 int InputFile(FILE *ifp){
@@ -222,4 +230,25 @@ int check_input(){
 	return 0 ;
 
 }
+
+
+void output_file(FILE *fp, BUF_NODE ** OBUF, DME_TREE_NODE * OT, DME_TREE_NODE ** OTmap){
+	if ( fp ==  NULL) {
+		printf(" error input file name \n");
+		return ;
+	}
+		
+	print_fig_3(OT,OTmap);
+	fprintf(fp,"sourcenode 0 0\n");
+	fprintf(fp,"num node %d\n", num_node); 
+	Out_put_files_coordinate(fp,OBUF,OT);
+	fprintf(fp,"num sinknode %d\n", num_sinknode);
+	Out_put_files_sink(fp, OT) ; 
+	fprintf(fp,"num wire %d\n", num_wire);
+	Out_put_files_connect(fp,OBUF, OT);	
+	fprintf(fp,"num buffer %d\n",num_buffer);
+	Out_put_files_buf(fp, num_total_nodes, OBUF, OTmap);
+
+}
+
 
