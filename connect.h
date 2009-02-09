@@ -8,37 +8,34 @@
 #include "ds.h"
 
 // ----------------------------------------------------------------//
-// constant and macros
+// constants macros typedefs
 enum BOOL_VAL{FALSE,TRUE};
 enum POS{LL,LR,UR,UL}; // low-left, low-right, up-right, up-left
 enum DIRS{INVALID,LEFT,RIGHT,UP,DOWN};
-const static char *dir_string[]={"-","L","R","U","D"};
+const static char *dir_string[]={"-","L","R","U","D"}; // for output
 #define ABS(a) ((a)<0.0?(-(a)):(a))
 #define MHT(s,t) (ABS((s.x)-(t.x))+ABS((s.y)-(t.y)))
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #define MIN(a,b) ((a)>(b)?(b):(a))
-#define EPSILON 0.0000000001
-// determines if two double value is the same
-#define EQUALDOUBLE(a,b) (ABS((a)-(b))<EPSILON?TRUE:FALSE)
-#define INFINITE 10000.0
-#define H 1
-#define V 0
+#define EPSILON 0.0000000001   // double type precision
+#define INFINITE 10000.0       // big number to denote infinite
 #define L 10.0
+// determines if two double value is ``the same''
+#define EQUALDOUBLE(a,b) (ABS((a)-(b))<EPSILON?TRUE:FALSE)
 
 typedef char BOOL;
-typedef struct point{double x,y;}Pt;
 typedef struct ver_seg{ double x,y1,y2; }VSEG;
 typedef struct hor_seg{ double y,x1,x2; }HSEG;
 typedef char DIRECTION;
 
 // ----------------------------------------------------------------//
 // functions operate on struct
-
-void setpt(Pt *p,double xx,double yy){p->x=xx;p->y=yy;}
+// set the value of a vertical segment
 void setvseg(VSEG * v,double xx,double yy1,double yy2){
 	v->x = xx;
 	v->y1 = yy1; v->y2 = yy2;
 }
+// set the value of a horizontal segment
 void sethseg(HSEG * h,double yy,double xx1,double xx2){
 	h->y = yy;
 	h->x1 = xx1; h->x2 = xx2;
@@ -47,31 +44,21 @@ void sethseg(HSEG * h,double yy,double xx1,double xx2){
 // ----------------------------------------------------------------//
 // global variables
 
-static int width=10;
-static int precision=2;
-double **g;	// a matrix of graph, order = g_size
-int g_size=0;   // size of g
-DIRECTION ** dirs; // the move directions between two point,same size as graph
-VSEG * vlist;	// vertical list
-HSEG * hlist;   // horizontal list
-int v_size=0;   // size of vlist
-int h_size=0;   // size of hlist
+static int width=10;    // controls output width
+static int precision=2; // controls double type output precision
+double **g=NULL;        // a matrix of graph, order = g_size
+int g_size=0;           // size of g
+DIRECTION ** dirs=NULL; // the move directions between two point,same size as graph
+VSEG * vlist=NULL;	// vertical list
+HSEG * hlist=NULL;      // horizontal list
+int v_size=0;           // size of vlist
+int h_size=0;           // size of hlist
+
+double *distance=NULL;  // shortest path distance vector, size = g_size
+int *backtrack=NULL;	// backtrack vector, size = g_size;
 
 // ----------------------------------------------------------------//
 // functions
-
-/*
-int reverse_dir(DIRECTION origin){
-	DIRECTION result;
-	switch(origin){
-	case LEFT:    result = RIGHT; break;
-	case RIGHT:   result = LEFT; break;
-	case UP:      result = DOWN; break;
-	case DOWN:     result = UP; break;
-	}
-	return result;
-}
-*/
 
 // set all the member of the graph matrix to 0
 // REQUIRE: the size of the graph has been set
@@ -81,21 +68,28 @@ void clearg(){
 		memset(g[i],0,sizeof(double)*g_size);
 }
 
+// allocate space for graph, directions, shortest path, backtrack vector
 // set all members of the graph matrix to INFINITE except the diagnal
 // n    : number of blockages
 void initg(int n){
-	// allocate space for g and dirs
+	// allocate space for **g, **dirs, *distance, *backtrack
 	g_size = n*4+2;
 	g = (double**)malloc((g_size)*sizeof(double*));
 	dirs = (DIRECTION**)malloc((g_size)*sizeof(DIRECTION*));
+	distance = (double *) malloc(g_size * sizeof(double));
+	backtrack = (int *) malloc(g_size * sizeof(int));
 	int i,j;
 	for(i=0;i<g_size;i++){
 		g[i] = (double *) malloc(g_size*sizeof(double));
 		dirs[i] = (DIRECTION *) malloc(g_size*sizeof(DIRECTION));
-		memset(dirs[i],INVALID,g_size*sizeof(DIRECTION));// INVALID = 0
+
+		distance[i] = INFINITE;
+		backtrack[i] = -1;
+
+		memset(dirs[i],INVALID,g_size*sizeof(DIRECTION)); // INVALID = 0
 	}
 
-	for(i=0;i<g_size;i++){
+	for(i=0;i<g_size;i++){// initialize the graph to be not connected
 		for(j=0;j<g_size;j++){
 			if(i==j) g[i][j] = 0.0;
 			else g[i][j] = INFINITE;
@@ -119,6 +113,7 @@ void outputg(){
 	}
 }
 
+// output the manhattan directions of the graph
 void output_dirs(){
 	int i,j;
 	static char format[20];
@@ -149,7 +144,7 @@ BOOL intersect(HSEG hor,VSEG ver){
 // RETURN : their manhattan distance, 
 //          and the moving direction from a to b
 //          if not, return a negative double
-double reachable(NODE a,NODE b,DIRECTION * a2b,DIRECTION * b2a){
+double reachable(NODE a,NODE b,int idx_a,int idx_b){
 	// for each path, traverse all the line segments to see if 
 	// there is intersections
 	// first gen the four segments:
@@ -159,6 +154,8 @@ double reachable(NODE a,NODE b,DIRECTION * a2b,DIRECTION * b2a){
 	//    `---------`
 	//         1
 	// there are two different manhattan paths in {14,32,31,24}
+	DIRECTION * a2b = &dirs[idx_a][idx_b];
+	DIRECTION * b2a = &dirs[idx_b][idx_a];
 	HSEG hor1,hor2;
 	VSEG ver3,ver4;
 	hor1.x1 = hor2.x1 = ver3.x = MIN(a.x,b.x);
@@ -233,13 +230,17 @@ double reachable(NODE a,NODE b,DIRECTION * a2b,DIRECTION * b2a){
 		// ** judge the moving directions **
 		switch(relative){
 		case LL:
-			*a2b = RIGHT; *b2a = DOWN;break;
+			*a2b = RIGHT; *b2a = DOWN; 
+			break;
 		case UL:
-			*a2b = RIGHT; *b2a = UP;break;
+			*a2b = RIGHT; *b2a = UP;
+			break;
 		case LR:
-			*a2b = LEFT;  *b2a = DOWN;break;
+			*a2b = LEFT;  *b2a = DOWN;
+			break;
 		case UR:
-			*a2b = LEFT;  *b2a = UP;break;
+			*a2b = LEFT;  *b2a = UP;
+			break;
 		}
 		return MHT(a,b);
 	}
@@ -263,13 +264,17 @@ double reachable(NODE a,NODE b,DIRECTION * a2b,DIRECTION * b2a){
 	if( result == TRUE ) {// path 2 succeed
 		switch(relative){
 		case LL:
-			*a2b = UP;   *b2a = LEFT; break;
+			*a2b = UP;   *b2a = LEFT; 
+			break;
 		case LR:
-			*a2b = UP;   *b2a = RIGHT;break;
+			*a2b = UP;   *b2a = RIGHT;
+			break;
 		case UL:
-			*a2b = DOWN;  *b2a = LEFT;break;
+			*a2b = DOWN;  *b2a = LEFT;
+			break;
 		case UR:
-			*a2b = DOWN;  *b2a = RIGHT;break;
+			*a2b = DOWN;  *b2a = RIGHT;
+			break;
 		}
 		return MHT(a,b);
 	}
@@ -369,12 +374,10 @@ int constructg(BLOCKAGE * list){
 					double dist = reachable(
 							nodei[cor_i],
 							nodej[cor_j],
-							&dirs[idx1][idx2],
-							&dirs[idx2][idx1]);
-					if( dist > -1.0 ){
+							idx1,idx2);
+					if( dist > -1.0 )
 						g[idx1][idx2] = 
 							g[idx2][idx1] = dist;
-					}
 				}
 			}
 		}
@@ -383,40 +386,70 @@ int constructg(BLOCKAGE * list){
 }
 
 // add a point to the constructed graph from blockage list `l'
+// note that this function only compute's the 4*n point of blockage
+// NOT regarding another point to be added
 // REQUIRE : the graph
 // pt      : the point to add
-void addpt(NODE pt,BLOCKAGE * list){
+// index   : this point's index
+void addpt(NODE pt,int index,BLOCKAGE * list){
+	int i,j;
+	NODE corners[4];
+	for(i=0;i<list->num;i++){
+		BOX * box = &list->pool[i];
+		gen_node(box,corners);
+		for(j=0;j<4;j++){
+			int corner_idx = i*4+j;
+			double dist = reachable(pt,corners[i],
+					index,corner_idx);
+			if( dist > -1.0 )
+				g[index][corner_idx] = g[corner_idx] = dist;
+		}
+	}
 }
 
+// add the given two point into the constructed graph
+// note that if they are connected, there is a one-bend manhattan path
+// s,t  : the two point to be added
+// list : the blockages
 void add2pt(NODE s,NODE t,BLOCKAGE * list){
+	int s_idx = 4*list->num;
+	int t_idx = s_idx+1;
+	// add two point first
+	addpt(s,s_idx,list);
+	addpt(t,t_idx,list);
+	// check their connectivity
+	double dist = reachable(s,t,s_idx,t_idx);
+	if( dist > -1.0 )
+		g[s_idx][t_idx] = g[t_idx][s_idx] = dist;
 }
 
-// find the shortest path between two point(dijkstra)
+// find the shortest path between (last) two points(dijkstra)
+// the result is stored shortest path vector and backtrack vector
 // REQUIRE: the g has been constructed
-// s      : point 1
-// t      : point 2
-// RETURN :  a list of point in the rectilinear path
-double find_path(Pt s,Pt t){
+// RETURN : 
+void dijkstra(){
 	return 0.0;
 }
 
-// remember to free the space allocated for g
+// free the space allocated for g, MUST be called at the end
 void destroy_g(){
 	int i;
 	for(i=0;i<g_size;i++) {
 		free(g[i]);
 		free(dirs[i]);
 	}
+	g = dirs = NULL;
 }
 
-// remember to free the space allocated for segments
+// free the space allocated for segments, MUST be called at the end
 void destroy_segments(){
 	int i;
 	free(vlist);
 	free(hlist);
+	vlist = hlist = NULL;
 }
 
-// free all the allocated memory here
+// free the allocated memory of g, segments,dirs,
 void free_all(){
 	destroy_g();
 	destroy_segments();

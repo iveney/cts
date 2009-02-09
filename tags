@@ -40,12 +40,11 @@ FIFO_SIZE	BufPlace.c	7;"	d	file:
 Findex1	BufPlace.c	/^static int Findex1 = 0 ; $/;"	v	file:
 Findex2	BufPlace.c	/^static int Findex2 = 0 ;$/;"	v	file:
 GREEN	BufPlace.c	11;"	d	file:
-H	connect.h	24;"	d
 HSEG	connect.h	/^typedef struct hor_seg{ double y,x1,x2; }HSEG;$/;"	t	typeref:struct:hor_seg
 INFINITE	connect.h	23;"	d
 INVALID	connect.h	/^enum DIRS{INVALID,LEFT,RIGHT,UP,DOWN};$/;"	e	enum:DIRS
 InputFile	io.c	/^int InputFile(FILE *ifp){$/;"	f
-L	connect.h	26;"	d
+L	connect.h	24;"	d
 LAMBADA	ds.h	14;"	d
 LARGE_BUF_SIZE	ds.h	7;"	d
 LEFT	connect.h	/^enum DIRS{INVALID,LEFT,RIGHT,UP,DOWN};$/;"	e	enum:DIRS
@@ -67,7 +66,6 @@ Out_put_files_connect	BufPlace.c	/^void Out_put_files_connect(FILE * fp, BUF_NOD
 Out_put_files_coordinate	BufPlace.c	/^void Out_put_files_coordinate(FILE *fp, BUF_NODE ** bufnode1, DME_TREE_NODE * Troot){$/;"	f
 Out_put_files_sink	BufPlace.c	/^void Out_put_files_sink(FILE *fp, DME_TREE_NODE * Troot){$/;"	f
 POS	connect.h	/^enum POS{LL,LR,UR,UL}; \/\/ low-left, low-right, up-right, up-left$/;"	g
-Pt	connect.h	/^typedef struct point{double x,y;}Pt;$/;"	t	typeref:struct:point
 RED	BufPlace.c	13;"	d	file:
 RIGHT	connect.h	/^enum DIRS{INVALID,LEFT,RIGHT,UP,DOWN};$/;"	e	enum:DIRS
 SINK	ds.h	/^}SINK ; $/;"	t	typeref:struct:isink
@@ -85,7 +83,6 @@ TRUE	connect.h	/^enum BOOL_VAL{FALSE,TRUE};$/;"	e	enum:BOOL_VAL
 UL	connect.h	/^enum POS{LL,LR,UR,UL}; \/\/ low-left, low-right, up-right, up-left$/;"	e	enum:POS
 UP	connect.h	/^enum DIRS{INVALID,LEFT,RIGHT,UP,DOWN};$/;"	e	enum:DIRS
 UR	connect.h	/^enum POS{LL,LR,UR,UL}; \/\/ low-left, low-right, up-right, up-left$/;"	e	enum:POS
-V	connect.h	25;"	d
 VDDLIB	ds.h	/^}VDDLIB ; $/;"	t	typeref:struct:ivddlib
 VSEG	connect.h	/^typedef struct ver_seg{ double x,y1,y2; }VSEG;$/;"	t	typeref:struct:ver_seg
 WHITE	BufPlace.c	14;"	d	file:
@@ -94,7 +91,7 @@ WIRELIB	ds.h	/^}WIRELIB ; $/;"	t	typeref:struct:iwirelib
 __CONNECT_H__	connect.h	2;"	d
 add2pt	connect.h	/^void add2pt(NODE s,NODE t,BLOCKAGE * list){$/;"	f
 add_DME_node	BufPlace.c	/^void add_DME_node(DME_NODE *l , DME_TREE_NODE ** Troot, double x, double y){$/;"	f
-addpt	connect.h	/^void addpt(NODE pt,BLOCKAGE * list){$/;"	f
+addpt	connect.h	/^void addpt(NODE pt,int index,BLOCKAGE * list){$/;"	f
 altitude	ds.h	/^	double  altitude;$/;"	m	struct:dme_tree_node
 altitude	ds.h	/^	double altitude ; $/;"	m	struct:tem_node
 blockage	main.c	/^BLOCKAGE blockage;$/;"	v
@@ -133,8 +130,8 @@ debug_resultfile	eval2009.pl	/^sub debug_resultfile {$/;"	s
 deferred_merge_embedding	dme.c	/^DME_NODE* deferred_merge_embedding(){$/;"	f
 destroy_g	connect.h	/^void destroy_g(){$/;"	f
 destroy_segments	connect.h	/^void destroy_segments(){$/;"	f
-dir_string	connect.h	/^const static char *dir_string[]={"-","L","R","U","D"};$/;"	v
-dirs	connect.h	/^DIRECTION ** dirs; \/\/ the move directions between two point,same size as graph$/;"	v
+dir_string	connect.h	/^const static char *dir_string[]={"-","L","R","U","D"}; \/\/ for output$/;"	v
+dirs	connect.h	/^DIRECTION ** dirs;      \/\/ the move directions between two point,same size as graph$/;"	v
 dme_core	dme.c	/^void dme_core(DME_NODE * L, int length){$/;"	f
 dme_node	ds.h	/^typedef struct dme_node{$/;"	s
 dme_tree_node	ds.h	/^typedef struct dme_tree_node{$/;"	s
@@ -146,8 +143,8 @@ find_shortest_path	BufPlace.c	/^int find_shortest_path(int nd, DME_TREE_NODE * T
 frame	main.c	/^BOX frame	; $/;"	v
 frame	test.c	/^BOX frame	; $/;"	v
 free_all	connect.h	/^void free_all(){$/;"	f
-g	connect.h	/^double **g;	\/\/ a matrix of graph, order = g_size$/;"	v
-g_size	connect.h	/^int g_size=0;   \/\/ size of g$/;"	v
+g	connect.h	/^double **g;	        \/\/ a matrix of graph, order = g_size$/;"	v
+g_size	connect.h	/^int g_size=0;           \/\/ size of g$/;"	v
 gen_node	connect.h	/^void gen_node(BOX * b,NODE * node){$/;"	f
 gen_segments	connect.h	/^int gen_segments(BLOCKAGE * list){$/;"	f
 h_size	connect.h	/^int h_size=0;   \/\/ size of hlist$/;"	v
@@ -214,13 +211,12 @@ output_dirs	connect.h	/^void output_dirs(){$/;"	f
 output_file	io.c	/^void output_file(FILE *fp, BUF_NODE ** OBUF, DME_TREE_NODE * OT, DME_TREE_NODE ** OTmap){$/;"	f
 outputg	connect.h	/^void outputg(){$/;"	f
 pleft	ds.h	/^	struct dme_node * pleft;$/;"	m	struct:dme_node	typeref:struct:dme_node::dme_node
-point	connect.h	/^typedef struct point{double x,y;}Pt;$/;"	s
 pool	ds.h	/^	BOX *pool; $/;"	m	struct:iblockage
 pool	ds.h	/^	SNODE *pool ;	$/;"	m	struct:isink
 popFIFO	BufPlace.c	/^int popFIFO(BUF_POS * b){$/;"	f
 popStack	BufPlace.c	/^int 	popStack(){$/;"	f
 poreFIFO	BufPlace.c	/^int poreFIFO(){$/;"	f
-precision	connect.h	/^static int precision=2;$/;"	v
+precision	connect.h	/^static int precision=2; \/\/ controls double type output precision$/;"	v
 prev	ds.h	/^	int	    prev ; $/;"	m	struct:tem_node
 pright	ds.h	/^	struct dme_node * pright;$/;"	m	struct:dme_node	typeref:struct:dme_node::dme_node
 print_fig_1	dme.c	/^void print_fig_1(DME_NODE * L, int length){$/;"	f
@@ -229,7 +225,7 @@ print_fig_3	BufPlace.c	/^void print_fig_3(DME_TREE_NODE *Troot , DME_TREE_NODE *
 putFIFO	BufPlace.c	/^void putFIFO(BUF_POS * b, int totalnum){$/;"	f
 putStack	BufPlace.c	/^void putStack(int nd){$/;"	f
 r	ds.h	/^	double r;$/;"	m	struct:iwire
-reachable	connect.h	/^double reachable(NODE a,NODE b,DIRECTION * a2b,DIRECTION * b2a){$/;"	f
+reachable	connect.h	/^double reachable(NODE a,NODE b,int idx_a,int idx_b){$/;"	f
 remove_blocked	dme.c	/^void remove_blocked(DME_NODE * n){$/;"	f
 right	ds.h	/^	double right;$/;"	m	struct:dme_node
 right	ds.h	/^	int	   right; $/;"	m	struct:dme_tree_node
@@ -237,7 +233,6 @@ rs	ds.h	/^	struct dme_tree_node * rs;$/;"	m	struct:dme_tree_node	typeref:struct:
 select_x	ds.h	/^	double select_x;$/;"	m	struct:dme_node
 select_y	ds.h	/^	double select_y;$/;"	m	struct:dme_node
 sethseg	connect.h	/^void sethseg(HSEG * h,double yy,double xx1,double xx2){$/;"	f
-setpt	connect.h	/^void setpt(Pt *p,double xx,double yy){p->x=xx;p->y=yy;}$/;"	f
 settle_DME_tree	BufPlace.c	/^void settle_DME_tree(DME_TREE_NODE * Troot , double  father) { $/;"	f
 setvseg	connect.h	/^void setvseg(VSEG * v,double xx,double yy1,double yy2){$/;"	f
 sink	main.c	/^SINK sink	; $/;"	v
@@ -260,11 +255,10 @@ ver_seg	connect.h	/^typedef struct ver_seg{ double x,y1,y2; }VSEG;$/;"	s
 visited	ds.h	/^	int visited;$/;"	m	struct:dme_node
 vlist	connect.h	/^VSEG * vlist;	\/\/ vertical list$/;"	v
 weight	ds.h	/^	double weight;$/;"	m	struct:dme_node
-width	connect.h	/^static int width=10;$/;"	v
+width	connect.h	/^static int width=10;    \/\/ controls output width$/;"	v
 wirelib	main.c	/^WIRELIB wirelib;$/;"	v
 wirelib	test.c	/^WIRELIB wirelib;$/;"	v
 wiretype	ds.h	/^	int wiretype ;$/;"	m	struct:iwire
-x	connect.h	/^typedef struct point{double x,y;}Pt;$/;"	m	struct:point
 x	connect.h	/^typedef struct ver_seg{ double x,y1,y2; }VSEG;$/;"	m	struct:ver_seg
 x	ds.h	/^	double  x; $/;"	m	struct:dme_tree_node
 x	ds.h	/^	double x; $/;"	m	struct:tem_node
@@ -276,7 +270,6 @@ x1	ds.h	/^	double x1;$/;"	m	struct:dme_node
 x2	connect.h	/^typedef struct hor_seg{ double y,x1,x2; }HSEG;$/;"	m	struct:hor_seg
 x2	ds.h	/^	double x2;$/;"	m	struct:dme_node
 y	connect.h	/^typedef struct hor_seg{ double y,x1,x2; }HSEG;$/;"	m	struct:hor_seg
-y	connect.h	/^typedef struct point{double x,y;}Pt;$/;"	m	struct:point
 y	ds.h	/^	double  y; $/;"	m	struct:dme_tree_node
 y	ds.h	/^	double y;$/;"	m	struct:buf_node
 y	ds.h	/^	double y;$/;"	m	struct:tem_node
