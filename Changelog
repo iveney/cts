@@ -1,3 +1,9 @@
 PROBLEM:
 <Mon Feb  9 11:14:32 HKT 2009>
 why the node has point type of `int' but not `double'
+
+IMPROVEMENT:
+note that when determining the intersection
+can sort the list first, and use binary search to see if the segment's two end
+will locate in the same position:
+i.e. ... i (p1 p2) i+1 ...

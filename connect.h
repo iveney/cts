@@ -7,8 +7,11 @@
 #include <string.h>
 #include "ds.h"
 
+// ----------------------------------------------------------------//
+// constant and macros
 enum BOOL_VAL{FALSE,TRUE};
 enum POS{LL,LR,UR,UL};
+enum DIRS{LEFT,RIGHT,UP,LOW,INVALID};
 #define ABS(a) ((a)<0.0?(-(a)):(a))
 #define MHT(s,t) (ABS((s.x)-(t.x))+ABS((s.y)-(t.y)))
 #define MAX(a,b) ((a)>(b)?(a):(b))
@@ -19,15 +22,16 @@ enum POS{LL,LR,UR,UL};
 #define INFINITE 10000.0
 #define H 1
 #define V 0
+#define L 10.0
 
 typedef char BOOL;
 typedef struct point{double x,y;}Pt;
 typedef struct ver_seg{ double x,y1,y2; }VSEG;
 typedef struct hor_seg{ double y,x1,x2; }HSEG;
+typedef char DIRECTION;
 
-static int width=10;
-static int precision=2;
 // ----------------------------------------------------------------//
+// functions operate on struct
 
 void setpt(Pt *p,double xx,double yy){p->x=xx;p->y=yy;}
 void setvseg(VSEG * v,double xx,double yy1,double yy2){
@@ -40,13 +44,20 @@ void sethseg(HSEG * h,double yy,double xx1,double xx2){
 }
 
 // ----------------------------------------------------------------//
+// global variables
 
-double **g;	// a size-order matrix of graph 
+static int width=10;
+static int precision=2;
+double **g;	// a matrix of graph, order = g_size
 int g_size=0;   // size of g
+DIRECTION ** dirs; // the move directions between two point,same size as graph
 VSEG * vlist;	// vertical list
 HSEG * hlist;   // horizontal list
 int v_size=0;   // size of vlist
 int h_size=0;   // size of hlist
+
+// ----------------------------------------------------------------//
+// functions
 
 // set all the member of the graph matrix to 0
 // REQUIRE: the size of the graph has been set
@@ -97,17 +108,25 @@ BOOL intersect(HSEG hor,VSEG ver){
 // REQUIRE: a list of vertical segments
 //          a list of horizontal segments
 // RETURN : their manhattan distance, 
+//          and the moving direction from a to b
 //          if not, return a negative double
 double reachable(NODE a,NODE b){
-	// there are two different manhattan paths
+	// there are two different manhattan paths in total
 	// for each path, traverse all the line segments to see if 
 	// there is intersections
+	// first gen the four segments:
+	//         2
+	//    .---------.
+	// 3  |         |  4
+	//    `---------`
+	//         1
 	if(a.x > b.x ){// ensures a.x < b.x
 		NODE tmp = a;
 		a = b; b = tmp;
 	}
 	HSEG hor; VSEG ver;
 	int i,j;
+
 	// path 1:
 	hor.y = a.y;
 	hor.x1 = a.x;
@@ -175,26 +194,36 @@ void gen_node(BOX * b,NODE * node){
 // the list ensures that:
 // for ver: y1<y2
 // for hor: x1<x2
+// NOTE   : if some block has a width/height < L, it is not considered a block in vertical/horizontal
 // REQUIRE: a list of blockage
 int gen_segments(BLOCKAGE * list){
 	// for each block, there will be 2 vertical and 2 horizontal seg
-	h_size = v_size = list->num * 2;
-	hlist = malloc(h_size * sizeof(HSEG));
-	vlist = malloc(v_size * sizeof(VSEG));
+	int size = list->num * 2;
+	hlist = malloc(size * sizeof(HSEG));
+	vlist = malloc(size * sizeof(VSEG));
+	h_size=v_size=0;
 	int i;
 	NODE node[4];
 	for(i=0;i<list->num;i++){
 		BOX * pb = &list->pool[i];
-		int p=i*2,q=i*2+1;
-		hlist[p].y = pb->ll.y;
-		hlist[q].y = pb->ur.y;
-		hlist[p].x1 = hlist[q].x1 = pb->ll.x;
-		hlist[p].x2 = hlist[q].x2 = pb->ur.x;
-
-		vlist[p].x = pb->ll.x;
-		vlist[q].x = pb->ur.x;
-		vlist[p].y1 = vlist[q].y1 = pb->ll.y;
-		vlist[p].y2 = vlist[q].y2 = pb->ur.y;
+		int p=h_size*2;
+		int q=p+1;
+		// add horizontal segment
+		if( ABS(pb->ll.y - pb->ur.y ) >= L ){
+			hlist[p].y = pb->ll.y;
+			hlist[q].y = pb->ur.y;
+			hlist[p].x1 = hlist[q].x1 = pb->ll.x;
+			hlist[p].x2 = hlist[q].x2 = pb->ur.x;
+			h_size++;
+		}
+		// add vertical segment
+		if( ABS(pb->ll.x - pb->ur.x) >= L ){
+			vlist[p].x = pb->ll.x;
+			vlist[q].x = pb->ur.x;
+			vlist[p].y1 = vlist[q].y1 = pb->ll.y;
+			vlist[p].y2 = vlist[q].y2 = pb->ur.y;
+			v_size++;
+		}
 	}
 	// may sort the list from left to right, low to up
 	return 0;

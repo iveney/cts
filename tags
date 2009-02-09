@@ -41,6 +41,7 @@ H	connect.h	20;"	d
 HSEG	connect.h	/^typedef struct hor_seg{ double y,x1,x2; }HSEG;$/;"	t	typeref:struct:hor_seg
 INFINITE	connect.h	19;"	d
 InputFile	io.c	/^int InputFile(FILE *ifp){$/;"	f
+L	connect.h	22;"	d
 LAMBADA	ds.h	14;"	d
 LARGE_BUF_SIZE	ds.h	7;"	d
 LL	connect.h	/^enum POS{LL,LR,UR,UL};$/;"	e	enum:POS
