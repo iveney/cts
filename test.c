@@ -36,7 +36,7 @@ int main(int argc, char * argv[]){
 	constructg(&blockage);
 	outputg();
 	printf("\n---------------------------------------------------------\n");
-	output_dirs();
+	//output_dirs();
 
 	free_all();
 	return 0;

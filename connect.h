@@ -17,7 +17,7 @@ const static char *dir_string[]={"-","L","R","U","D"};
 #define MHT(s,t) (ABS((s.x)-(t.x))+ABS((s.y)-(t.y)))
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #define MIN(a,b) ((a)>(b)?(b):(a))
-#define EPSILON 0.0000001
+#define EPSILON 0.0000000001
 // determines if two double value is the same
 #define EQUALDOUBLE(a,b) (ABS((a)-(b))<EPSILON?TRUE:FALSE)
 #define INFINITE 10000.0
@@ -309,7 +309,7 @@ int gen_segments(BLOCKAGE * list){
 	NODE node[4];
 	for(i=0;i<list->num;i++){
 		BOX * pb = &list->pool[i];
-		int p=h_size*2;
+		int p=h_size;
 		int q=p+1;
 		// add horizontal segment
 		if( ABS(pb->ll.y - pb->ur.y ) >= L ){
@@ -378,6 +378,12 @@ int constructg(BLOCKAGE * list){
 		}
 	}
 	return 0;
+}
+
+// add a point to the constructed graph from blockage list `l'
+// REQUIRE : the graph
+// pt      : the point to add
+void addpt(NODE pt,BLOCKAGE * list){
 }
 
 // find the shortest path between two point(dijkstra)

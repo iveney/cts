@@ -92,6 +92,7 @@ WIRE	ds.h	/^} WIRE; $/;"	t	typeref:struct:iwire
 WIRELIB	ds.h	/^}WIRELIB ; $/;"	t	typeref:struct:iwirelib
 __CONNECT_H__	connect.h	2;"	d
 add_DME_node	BufPlace.c	/^void add_DME_node(DME_NODE *l , DME_TREE_NODE ** Troot, double x, double y){$/;"	f
+addpt	connect.h	/^void addpt(NODE pt,BLOCKAGE * list){$/;"	f
 altitude	ds.h	/^	double  altitude;$/;"	m	struct:dme_tree_node
 altitude	ds.h	/^	double altitude ; $/;"	m	struct:tem_node
 blockage	main.c	/^BLOCKAGE blockage;$/;"	v
