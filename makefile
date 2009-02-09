@@ -1,5 +1,5 @@
 CC = gcc -g -w
-CFLAGS = -O3
+CFLAGS = -O0
 OBJ = io.o dme.o main.o BufPlace.o 
 
 cts : $(OBJ)
