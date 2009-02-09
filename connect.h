@@ -7,18 +7,52 @@
 #include <string.h>
 #include "ds.h"
 
-#define ABS(a) ((a)<0.0?-(a):(a))
+#define ABS(a) ((a)<0.0?(-(a)):(a))
 #define MHT(s,t) (ABS((s.x)-(t.x))+ABS((s.y)-(t.y)))
+#define MAX(a,b) ((a)>(b)?(a):(b))
+#define MIN(a,b) ((a)>(b)?(b):(a))
 #define INFINITE 10000.0
+#define H 1
+#define V 0
+typedef char BOOL;
+enum BOOL_VAL{FALSE,TRUE};
+enum POS{LL,LR,UR,UL};
+
+typedef struct point{double x,y;}Pt;
+typedef struct ver_seg{ double x,y1,y2; }VSEG;
+typedef struct hor_seg{ double y,x1,x2; }HSEG;
+
 static int width=10;
 static int precision=2;
 
-typedef struct {double x,y;}Pt;
-void set(Pt *p,double xx,double yy){p->x=xx;p->y=yy;}
+/*
+typedef struct segment{
+	int seg_type;
+	union{
+		ver_seg v;
+		hor_seg h;
+	}seg;
+}SEGMENT;
+*/
 
+void setpt(Pt *p,double xx,double yy){p->x=xx;p->y=yy;}
+void setvseg(VSEG * v,double xx,double yy1,double yy2){
+	v->x = xx;
+	v->y1 = yy1; v->y2 = yy2;
+}
+void sethseg(HSEG * h,double yy,double xx1,double xx2){
+	h->y = yy;
+	h->x1 = xx1; h->x2 = xx2;
+}
+
+// ----------------------------------------------------------------//
 
 double **g;	// a size-order matrix of graph 
-int g_size=0;
+int g_size=0;   // size of g
+VSEG * vlist;	// vertical list
+HSEG * hlist;   // horizontal list
+int v_size=0;   // size of vlist
+int h_size=0;   // size of hlist
 
 // set all the member of the graph matrix to 0
 // REQUIRE: the size of the graph has been set
@@ -51,32 +85,161 @@ void outputg(){
 	}
 }
 
+// determin if two rectilinear segment intersects
+// hor : the horizontal segment
+// ver : the vertical segment
+BOOL intersect(HSEG hor,VSEG ver){
+	if( ver.x > hor.x1 && ver.x < hor.x2 &&
+	    hor.y > ver.y1 && hor.y < ver.y2)
+		return TRUE;
+	return FALSE;
+}
 
+// determine if two points are reachable in the sense of manhattan distance
+// REQUIRE: a list of vertical segments
+//          a list of horizontal segments
+// RETURN : their manhattan distance, 
+//          if not, return a negative double
+double reachable(NODE a,NODE b){
+	// there are two different manhattan paths
+	// for each path, traverse all the line segments to see if 
+	// there is intersections
+	if(a.x > b.x ){// ensures a.x < b.x
+		NODE tmp = a;
+		a = b; b = tmp;
+	}
+	HSEG hor; VSEG ver;
+	int i,j;
+	// path 1:
+	hor.y = a.y;
+	hor.x1 = a.x;
+	hor.x2 = b.x;
+
+	ver.x = b.x;
+	ver.y1 = MIN(a.y,b.y);
+	ver.y2 = MAX(a.y,b.y);
+	BOOL result = TRUE;
+	for(i=0;i<v_size;i++){// for vertical list
+		if( intersect(hor,vlist[i]) ){
+			result = FALSE;
+			break;
+		}
+	}
+	if( result != FALSE ){
+		for(j=0;j<h_size;j++){// for horizontal list
+			if( intersect(hlist[j],ver) ){
+				result = FALSE;
+				break;
+			}
+		}
+	}
+	if( result == TRUE ) return MHT(a,b);
+
+	// path 2:
+	hor.y = b.y; // only y pos changed
+	ver.x = a.x; // only x pos changed
+	result = TRUE;
+	for(i=0;i<v_size;i++){// for vertical list
+		if( intersect(hor,vlist[i]) ){
+			result = FALSE;
+			break;
+		}
+	}
+	if( result != FALSE ){
+		for(j=0;j<h_size;j++){// for horizontal list
+			if( intersect(hlist[j],ver) ){
+				result = FALSE;
+				break;
+			}
+		}
+	}
+
+	if( result == TRUE ) return MHT(a,b);
+	return -10.0;
+}
+
+// generate four nodes from a block
+// ll=0, lr=1, ur=2, ul=3
+// node: store the four nodes, must have 4 elements
+// b   : the block
+void gen_node(BOX * b,NODE * node){
+	node[LL] = b->ll;
+	node[UR] = b->ur;
+
+	node[LR].x = b->ur.x;
+	node[LR].y = b->ll.y;
+
+	node[UL].x = b->ll.x;
+	node[UL].y = b->ur.y;
+}
+
+// generate horizontal and vertical list
+// the list ensures that:
+// for ver: y1<y2
+// for hor: x1<x2
+// REQUIRE: a list of blockage
+int gen_segments(BLOCKAGE * list){
+	// for each block, there will be 2 vertical and 2 horizontal seg
+	h_size = v_size = list->num * 2;
+	hlist = malloc(h_size * sizeof(HSEG));
+	vlist = malloc(v_size * sizeof(VSEG));
+	int i;
+	NODE node[4];
+	for(i=0;i<list->num;i++){
+		BOX * pb = &list->pool[i];
+		int p=i*2,q=i*2+1;
+		hlist[p].y = pb->ll.y;
+		hlist[q].y = pb->ur.y;
+		hlist[p].x1 = hlist[q].x1 = pb->ll.x;
+		hlist[p].x2 = hlist[q].x2 = pb->ur.x;
+
+		vlist[p].x = pb->ll.x;
+		vlist[q].x = pb->ur.x;
+		vlist[p].y1 = vlist[q].y1 = pb->ll.y;
+		vlist[p].y2 = vlist[q].y2 = pb->ur.y;
+	}
+	// may sort the list from left to right, low to up
+	return 0;
+}
 
 // take a list of blockage, construct a graph for shortest path computation
 // REQUIRE: external storage g
 // list : pointer to BLOCKAGE
 int constructg(BLOCKAGE * list){
 	// allocate space for g
-	g_size = list->num+2;
+	g_size = list->num*4+2;
 	g = (double**)malloc((g_size)*sizeof(double*));
 	int i,j;
 	for(i=0;i<g_size;i++)
 		g[i] = (double *) malloc((g_size)*sizeof(double));
-	// initialize the elements
-	initg();
-	// start to construct the graph ... 
+	initg(); // initialize the elements
+	gen_segments(list); // generate segments from blockages
+
+	// start to construct the graph 
 	int b_i,b_j;
 	int cor_i,cor_j;
 	// for each corner of each blockage, 
 	// determine what corners it can each
 	// (in the sense of manhattan distance) : 4 for-loop
 	for(b_i=0;b_i<list->num;b_i++){
-		for(b_j=0;b_j<list->num;b_j++){
+		BOX * boxi = &list->pool[b_i];
+		for(b_j=b_i;b_j<list->num;b_j++){
+			BOX * boxj = &list->pool[b_j];
+			NODE nodei[4],nodej[4];
+			// generate the 4 nodes of each blockage
+			gen_node(boxi,nodei);
+			gen_node(boxj,nodej);
+			// note that need not to calculate the same point
+
 			for(cor_i=0;cor_i<4;cor_i++){
 				for(cor_j=0;cor_j<4;cor_j++){
-					if( reach() ){
-						//g[i][j] = g[j][i] = MHT();
+					if(b_i == b_j && cor_i == cor_j )
+						continue;
+					double dist = reachable(nodei[cor_i],nodej[cor_j]);
+					int idx1 = b_i*4+cor_i;
+					int idx2 = b_j*4+cor_j;
+					if( dist > -1.0 ){
+						g[idx1][idx2]=g[idx2][idx1] = dist;
 					}
 				}
 			}
@@ -95,9 +258,22 @@ double find_path(Pt s,Pt t){
 }
 
 // remember to free the space allocated for g
-void destructg(){
+void destroy_g(){
 	int i;
 	for(i=0;i<g_size;i++) free(g[i]);
+}
+
+// remember to free the space allocated for segments
+void destroy_segments(){
+	int i;
+	free(vlist);
+	free(hlist);
+}
+
+// free all the allocated memory here
+void free_all(){
+	destroy_g();
+	destroy_segments();
 }
 
 #endif
