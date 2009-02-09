@@ -4,7 +4,7 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.7	//
-ABS	connect.h	10;"	d
+ABS	connect.h	12;"	d
 Absdist	BufPlace.c	19;"	d	file:
 BASIC_STRUCTURE_H	ds.h	4;"	d
 BLACK	BufPlace.c	9;"	d	file:
@@ -27,6 +27,8 @@ DME_NODE	ds.h	/^}DME_NODE;$/;"	t	typeref:struct:dme_node
 DME_TREE_NODE	ds.h	/^}DME_TREE_NODE;$/;"	t	typeref:struct:dme_tree_node
 Dashed	BufPlace.c	15;"	d	file:
 ELMORE	ds.h	10;"	d
+EPSILON	connect.h	16;"	d
+EQUALDOUBLE	connect.h	18;"	d
 Enhance_Buf	BufPlace.c	/^void Enhance_Buf(DME_TREE_NODE *Troot,  DME_TREE_NODE ** map, int totalnum){$/;"	f
 FALSE	connect.h	/^enum BOOL_VAL{FALSE,TRUE};$/;"	e	enum:BOOL_VAL
 FIFO1	BufPlace.c	/^BUF_POS * FIFO1 ;$/;"	v
@@ -35,20 +37,20 @@ FIFO_SIZE	BufPlace.c	7;"	d	file:
 Findex1	BufPlace.c	/^static int Findex1 = 0 ; $/;"	v	file:
 Findex2	BufPlace.c	/^static int Findex2 = 0 ;$/;"	v	file:
 GREEN	BufPlace.c	11;"	d	file:
-H	connect.h	15;"	d
+H	connect.h	20;"	d
 HSEG	connect.h	/^typedef struct hor_seg{ double y,x1,x2; }HSEG;$/;"	t	typeref:struct:hor_seg
-INFINITE	connect.h	14;"	d
+INFINITE	connect.h	19;"	d
 InputFile	io.c	/^int InputFile(FILE *ifp){$/;"	f
 LAMBADA	ds.h	14;"	d
 LARGE_BUF_SIZE	ds.h	7;"	d
 LL	connect.h	/^enum POS{LL,LR,UR,UL};$/;"	e	enum:POS
 LR	connect.h	/^enum POS{LL,LR,UR,UL};$/;"	e	enum:POS
 Lsmall	BufPlace.c	6;"	d	file:
-MAX	connect.h	12;"	d
+MAX	connect.h	14;"	d
 MAX	ds.h	8;"	d
 MAX_DOUBLE	BufPlace.c	17;"	d	file:
-MHT	connect.h	11;"	d
-MIN	connect.h	13;"	d
+MHT	connect.h	13;"	d
+MIN	connect.h	15;"	d
 MIN	ds.h	9;"	d
 Manhattan	ds.h	18;"	d
 NODE	ds.h	/^}NODE ; $/;"	t	typeref:struct:inode
@@ -74,7 +76,7 @@ StackIndex	BufPlace.c	/^static int StackIndex = 0 ;$/;"	v	file:
 TRUE	connect.h	/^enum BOOL_VAL{FALSE,TRUE};$/;"	e	enum:BOOL_VAL
 UL	connect.h	/^enum POS{LL,LR,UR,UL};$/;"	e	enum:POS
 UR	connect.h	/^enum POS{LL,LR,UR,UL};$/;"	e	enum:POS
-V	connect.h	16;"	d
+V	connect.h	21;"	d
 VDDLIB	ds.h	/^}VDDLIB ; $/;"	t	typeref:struct:ivddlib
 VSEG	connect.h	/^typedef struct ver_seg{ double x,y1,y2; }VSEG;$/;"	t	typeref:struct:ver_seg
 WHITE	BufPlace.c	14;"	d	file:

@@ -7,33 +7,27 @@
 #include <string.h>
 #include "ds.h"
 
+enum BOOL_VAL{FALSE,TRUE};
+enum POS{LL,LR,UR,UL};
 #define ABS(a) ((a)<0.0?(-(a)):(a))
 #define MHT(s,t) (ABS((s.x)-(t.x))+ABS((s.y)-(t.y)))
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #define MIN(a,b) ((a)>(b)?(b):(a))
+#define EPSILON 0.0000001
+// determines if two double value is the same
+#define EQUALDOUBLE(a,b) (ABS((a)-(b))<EPSILON?TRUE:FALSE)
 #define INFINITE 10000.0
 #define H 1
 #define V 0
-typedef char BOOL;
-enum BOOL_VAL{FALSE,TRUE};
-enum POS{LL,LR,UR,UL};
 
+typedef char BOOL;
 typedef struct point{double x,y;}Pt;
 typedef struct ver_seg{ double x,y1,y2; }VSEG;
 typedef struct hor_seg{ double y,x1,x2; }HSEG;
 
 static int width=10;
 static int precision=2;
-
-/*
-typedef struct segment{
-	int seg_type;
-	union{
-		ver_seg v;
-		hor_seg h;
-	}seg;
-}SEGMENT;
-*/
+// ----------------------------------------------------------------//
 
 void setpt(Pt *p,double xx,double yy){p->x=xx;p->y=yy;}
 void setvseg(VSEG * v,double xx,double yy1,double yy2){
@@ -76,11 +70,15 @@ void initg(){
 // output the matrix of graph
 void outputg(){
 	int i,j;
-	static char format[80];
+	static char format[20];
+	static char inf_string[20];
 	sprintf(format,"%%%d.%dlf",width,precision); // %10.8lf like format
+	sprintf(inf_string,"%%%ds",width); // %10.8lf like format
 	for(i=0;i<g_size;i++){
 		for(j=0;j<g_size;j++)
-			printf(format,g[i][j]);
+			if( EQUALDOUBLE(g[i][j],INFINITE) )
+				printf(inf_string,"-");
+			else printf(format,g[i][j]);
 		printf("\n");
 	}
 }
