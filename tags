@@ -18,8 +18,8 @@ BUFLIB	ds.h	/^}BUFLIB ; $/;"	t	typeref:struct:ibuflib
 BUF_NODE	ds.h	/^}BUF_NODE ;$/;"	t	typeref:struct:buf_node
 BUF_POS	ds.h	/^} BUF_POS;$/;"	t	typeref:struct:tem_node
 Buffer_Placement	BufPlace.c	/^void Buffer_Placement (DME_TREE_NODE * Troot, int K, double * saa, int lnum, int totalnum, DME_TREE_NODE ** DME_tree_map){$/;"	f
-CC	makefile	/^CC = gcc -g -w$/;"	m
-CFLAGS	makefile	/^CFLAGS = -O0$/;"	m
+CC	makefile	/^CC=\/usr\/bin\/gcc $/;"	m
+CFLAGS	makefile	/^CFLAGS=-O0 -g -w$/;"	m
 CYAN	BufPlace.c	12;"	d	file:
 CapLimit	main.c	/^int CapLimit ; $/;"	v
 CapLimit	test.c	/^int CapLimit ; $/;"	v
@@ -60,7 +60,7 @@ MIN	connect.h	19;"	d
 MIN	ds.h	9;"	d
 Manhattan	ds.h	18;"	d
 NODE	ds.h	/^}NODE ; $/;"	t	typeref:struct:inode
-OBJ	makefile	/^OBJ = io.o dme.o main.o BufPlace.o $/;"	m
+OBJ	makefile	/^OBJ=$(SRC:%.c=%.o)$/;"	m
 OFFSET	ds.h	12;"	d
 Out_put_files_buf	BufPlace.c	/^void Out_put_files_buf(FILE * fp, int lnum,   BUF_NODE ** bufnode1 ,  DME_TREE_NODE ** map){$/;"	f
 Out_put_files_connect	BufPlace.c	/^void Out_put_files_connect(FILE * fp, BUF_NODE ** bufnode1, DME_TREE_NODE * Troot){$/;"	f
@@ -75,6 +75,7 @@ SMALL_BUF_SIZE	ds.h	6;"	d
 SNODE	ds.h	/^}SNODE; $/;"	t	typeref:struct:isnode
 SOLID	BufPlace.c	16;"	d	file:
 SOURCE	ds.h	/^}SOURCE;$/;"	t	typeref:struct:isource
+SRC	makefile	/^SRC=io.c dme.c main.c BufPlace.c$/;"	m
 STACK_SIZE	BufPlace.c	8;"	d	file:
 SlewLimit	main.c	/^int SlewLimit; $/;"	v
 SlewLimit	test.c	/^int SlewLimit; $/;"	v
@@ -91,6 +92,7 @@ WHITE	BufPlace.c	14;"	d	file:
 WIRE	ds.h	/^} WIRE; $/;"	t	typeref:struct:iwire
 WIRELIB	ds.h	/^}WIRELIB ; $/;"	t	typeref:struct:iwirelib
 __CONNECT_H__	connect.h	2;"	d
+add2pt	connect.h	/^void add2pt(NODE s,NODE t,BLOCKAGE * list){$/;"	f
 add_DME_node	BufPlace.c	/^void add_DME_node(DME_NODE *l , DME_TREE_NODE ** Troot, double x, double y){$/;"	f
 addpt	connect.h	/^void addpt(NODE pt,BLOCKAGE * list){$/;"	f
 altitude	ds.h	/^	double  altitude;$/;"	m	struct:dme_tree_node

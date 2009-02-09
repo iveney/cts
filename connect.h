@@ -388,7 +388,7 @@ int constructg(BLOCKAGE * list){
 void addpt(NODE pt,BLOCKAGE * list){
 }
 
-void add2pt(NODE s,NODE t){
+void add2pt(NODE s,NODE t,BLOCKAGE * list){
 }
 
 // find the shortest path between two point(dijkstra)
