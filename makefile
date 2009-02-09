@@ -12,7 +12,7 @@ dme.o : dme.c ds.h
 	$(CC) -c $(CFLAGS) dme.c
 bufplace.o : BufPlace.c ds.h
 	$(CC) -c $(CFLAGS) BufPlace.c
-test: test.c connect.h io.o
+test: test.c connect.h io.o BufPlace.o
 	$(CC) -c $(CFLAGS) test.c 
 	$(CC) -o test $(CFLAGS) test.o io.c BufPlace.o -lm
 	ctags -R *

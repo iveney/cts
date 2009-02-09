@@ -312,20 +312,22 @@ int gen_segments(BLOCKAGE * list){
 		int p=h_size;
 		int q=p+1;
 		// add horizontal segment
-		if( ABS(pb->ll.y - pb->ur.y ) >= L ){
+		if( ABS(ABS(pb->ll.y - pb->ur.y) - L) > EPSILON ){// height
 			hlist[p].y = pb->ll.y;
 			hlist[q].y = pb->ur.y;
 			hlist[p].x1 = hlist[q].x1 = pb->ll.x;
 			hlist[p].x2 = hlist[q].x2 = pb->ur.x;
-			h_size++;
+			h_size+=2;
 		}
 		// add vertical segment
-		if( ABS(pb->ll.x - pb->ur.x) >= L ){
+		p=v_size;
+		q=p+1;
+		if( ABS(ABS(pb->ll.x - pb->ur.x) - L) > EPSILON ){// width
 			vlist[p].x = pb->ll.x;
 			vlist[q].x = pb->ur.x;
 			vlist[p].y1 = vlist[q].y1 = pb->ll.y;
 			vlist[p].y2 = vlist[q].y2 = pb->ur.y;
-			v_size++;
+			v_size+=2;
 		}
 	}
 	// may sort the list from left to right, low to up
@@ -384,6 +386,9 @@ int constructg(BLOCKAGE * list){
 // REQUIRE : the graph
 // pt      : the point to add
 void addpt(NODE pt,BLOCKAGE * list){
+}
+
+void add2pt(NODE s,NODE t){
 }
 
 // find the shortest path between two point(dijkstra)
