@@ -1,0 +1,222 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.7	//
+ABS	connect.h	10;"	d
+Absdist	BufPlace.c	19;"	d	file:
+BASIC_STRUCTURE_H	ds.h	4;"	d
+BLACK	BufPlace.c	9;"	d	file:
+BLOCKAGE	ds.h	/^} BLOCKAGE ;$/;"	t	typeref:struct:iblockage
+BLUE	BufPlace.c	10;"	d	file:
+BOX	ds.h	/^} BOX;$/;"	t	typeref:struct:ibox
+BUFFER	ds.h	/^} BUFFER; $/;"	t	typeref:struct:ibuffer
+BUFLIB	ds.h	/^}BUFLIB ; $/;"	t	typeref:struct:ibuflib
+BUF_NODE	ds.h	/^}BUF_NODE ;$/;"	t	typeref:struct:buf_node
+BUF_POS	ds.h	/^} BUF_POS;$/;"	t	typeref:struct:tem_node
+Buffer_Placement	BufPlace.c	/^void Buffer_Placement (DME_TREE_NODE * Troot, int K, double * saa, int lnum, int totalnum, DME_TREE_NODE ** DME_tree_map){$/;"	f
+CC	makefile	/^CC = gcc -g -w$/;"	m
+CFLAGS	makefile	/^CFLAGS = -O3$/;"	m
+CYAN	BufPlace.c	12;"	d	file:
+CapLimit	main.c	/^int CapLimit ; $/;"	v
+DME_NODE	ds.h	/^}DME_NODE;$/;"	t	typeref:struct:dme_node
+DME_TREE_NODE	ds.h	/^}DME_TREE_NODE;$/;"	t	typeref:struct:dme_tree_node
+Dashed	BufPlace.c	15;"	d	file:
+ELMORE	ds.h	10;"	d
+Enhance_Buf	BufPlace.c	/^void Enhance_Buf(DME_TREE_NODE *Troot,  DME_TREE_NODE ** map, int totalnum){$/;"	f
+FIFO1	BufPlace.c	/^BUF_POS * FIFO1 ;$/;"	v
+FIFO2	BufPlace.c	/^BUF_POS * FIFO2 ;$/;"	v
+FIFO_SIZE	BufPlace.c	7;"	d	file:
+Findex1	BufPlace.c	/^static int Findex1 = 0 ; $/;"	v	file:
+Findex2	BufPlace.c	/^static int Findex2 = 0 ;$/;"	v	file:
+GREEN	BufPlace.c	11;"	d	file:
+INFINITE	connect.h	12;"	d
+InputFile	io.c	/^int InputFile(FILE *ifp){$/;"	f
+LAMBADA	ds.h	14;"	d
+LARGE_BUF_SIZE	ds.h	7;"	d
+Lsmall	BufPlace.c	6;"	d	file:
+MAX	ds.h	8;"	d
+MAX_DOUBLE	BufPlace.c	17;"	d	file:
+MHT	connect.h	11;"	d
+MIN	ds.h	9;"	d
+Manhattan	ds.h	18;"	d
+NODE	ds.h	/^}NODE ; $/;"	t	typeref:struct:inode
+OBJ	makefile	/^OBJ = io.o dme.o main.o BufPlace.o$/;"	m
+OFFSET	ds.h	12;"	d
+Out_put_files_buf	BufPlace.c	/^void Out_put_files_buf(FILE * fp, int lnum,   BUF_NODE ** bufnode1 ,  DME_TREE_NODE ** map){$/;"	f
+Out_put_files_connect	BufPlace.c	/^void Out_put_files_connect(FILE * fp, BUF_NODE ** bufnode1, DME_TREE_NODE * Troot){$/;"	f
+Out_put_files_coordinate	BufPlace.c	/^void Out_put_files_coordinate(FILE *fp, BUF_NODE ** bufnode1, DME_TREE_NODE * Troot){$/;"	f
+Out_put_files_sink	BufPlace.c	/^void Out_put_files_sink(FILE *fp, DME_TREE_NODE * Troot){$/;"	f
+Pt	connect.h	/^typedef struct {double x,y;}Pt;$/;"	t	typeref:struct:__anon1
+RED	BufPlace.c	13;"	d	file:
+SINK	ds.h	/^}SINK ; $/;"	t	typeref:struct:isink
+SMALL_BUF_SIZE	ds.h	6;"	d
+SNODE	ds.h	/^}SNODE; $/;"	t	typeref:struct:isnode
+SOLID	BufPlace.c	16;"	d	file:
+SOURCE	ds.h	/^}SOURCE;$/;"	t	typeref:struct:isource
+STACK_SIZE	BufPlace.c	8;"	d	file:
+SlewLimit	main.c	/^int SlewLimit; $/;"	v
+Stack	BufPlace.c	/^int *Stack ; $/;"	v
+StackIndex	BufPlace.c	/^static int StackIndex = 0 ;$/;"	v	file:
+VDDLIB	ds.h	/^}VDDLIB ; $/;"	t	typeref:struct:ivddlib
+WHITE	BufPlace.c	14;"	d	file:
+WIRE	ds.h	/^} WIRE; $/;"	t	typeref:struct:iwire
+WIRELIB	ds.h	/^}WIRELIB ; $/;"	t	typeref:struct:iwirelib
+__CONNECT_H__	connect.h	2;"	d
+add_DME_node	BufPlace.c	/^void add_DME_node(DME_NODE *l , DME_TREE_NODE ** Troot, double x, double y){$/;"	f
+altitude	ds.h	/^	double  altitude;$/;"	m	struct:dme_tree_node
+altitude	ds.h	/^	double altitude ; $/;"	m	struct:tem_node
+blockage	main.c	/^BLOCKAGE blockage;$/;"	v
+blockageManhattan	dme.c	/^double blockageManhattan(double x1, double y1, double x2, double y2, int *blockage_index, int *direction){$/;"	f
+blockage_detour	ds.h	/^	int blockage_detour;$/;"	m	struct:dme_node
+blockage_node	ds.h	/^	int blockage_node;$/;"	m	struct:dme_node
+buf_a	BufPlace.c	/^static int buf_a = 0;$/;"	v	file:
+buf_i	BufPlace.c	/^static int buf_i   ;$/;"	v	file:
+buf_id	ds.h	/^	int buf_id; $/;"	m	struct:ibuffer
+buf_id	ds.h	/^	int buf_id;$/;"	m	struct:buf_node
+buf_node	ds.h	/^typedef struct buf_node{$/;"	s
+buflib	main.c	/^BUFLIB	buflib ; $/;"	v
+bufname	ds.h	/^	int bufname ;$/;"	m	struct:isource
+bufnode	BufPlace.c	/^BUF_NODE ** bufnode; $/;"	v
+c	ds.h	/^	double c;$/;"	m	struct:iwire
+cal_distance	dme.c	/^double cal_distance(DME_NODE * n1, DME_NODE * n2, int blockage_aware, int *blockage_index, int *direction){$/;"	f
+capacitance	ds.h	/^	double capacitance;$/;"	m	struct:dme_node
+check_DME	BufPlace.c	/^int check_DME(DME_NODE * af ) {$/;"	f
+check_DME_tree	BufPlace.c	/^void check_DME_tree(DME_TREE_NODE * Troot){$/;"	f
+check_blockage_overlap	eval2009.pl	/^sub check_blockage_overlap{$/;"	s
+check_input	io.c	/^int check_input(){$/;"	f
+check_node_is_inverted	eval2009.pl	/^sub check_node_is_inverted{$/;"	s
+check_sink_alt_array	BufPlace.c	/^void check_sink_alt_array(double * sink_alt_array, int lnum){$/;"	f
+clearg	connect.h	/^void clearg(){$/;"	f
+construct_DME_map	BufPlace.c	/^void construct_DME_map(DME_TREE_NODE * Troot, DME_TREE_NODE ** Tmap){$/;"	f
+construct_DME_tree	BufPlace.c	/^void construct_DME_tree(DME_NODE * l, int lnum, DME_TREE_NODE **Troot){$/;"	f
+construct_SINK_array	BufPlace.c	/^void construct_SINK_array( DME_TREE_NODE * Troot , double *sink_alt_array){$/;"	f
+constructg	connect.h	/^int constructg(BLOCKAGE * list){$/;"	f
+coordinate_translate	dme.c	/^void coordinate_translate(DME_NODE * n){	$/;"	f
+cpy_double	BufPlace.c	/^void cpy_double (double *saa, double *sbb, int lnum ){$/;"	f
+debug_infile	eval2009.pl	/^sub debug_infile {$/;"	s
+debug_neighbor	eval2009.pl	/^sub debug_neighbor{$/;"	s
+debug_resultfile	eval2009.pl	/^sub debug_resultfile {$/;"	s
+deferred_merge_embedding	dme.c	/^DME_NODE* deferred_merge_embedding(){$/;"	f
+destructg	connect.h	/^void destructg(){$/;"	f
+dme_core	dme.c	/^void dme_core(DME_NODE * L, int length){$/;"	f
+dme_node	ds.h	/^typedef struct dme_node{$/;"	s
+dme_tree_node	ds.h	/^typedef struct dme_tree_node{$/;"	s
+draw_point	BufPlace.c	/^void draw_point( FILE *fp , double x1, double y1, int dash, int colour){$/;"	f
+draw_wire	BufPlace.c	/^void draw_wire(FILE *fp, double x1, double y1, double x2, double y2, int dash, int colour){$/;"	f
+find_one_buf_pos	BufPlace.c	/^int find_one_buf_pos(BUF_POS * ibp, int target, DME_TREE_NODE *Troot, DME_TREE_NODE ** map,BUF_POS *ibm, double stepv, double *sbb) {$/;"	f
+find_path	connect.h	/^double find_path(Pt s,Pt t){$/;"	f
+find_shortest_path	BufPlace.c	/^int find_shortest_path(int nd, DME_TREE_NODE * Troot, DME_TREE_NODE **map , double *scc){$/;"	f
+frame	main.c	/^BOX frame	; $/;"	v
+g	connect.h	/^double **g;	\/\/ a size-order matrix of graph $/;"	v
+g_size	connect.h	/^int g_size=0;$/;"	v
+handle_blockage_dme_node	dme.c	/^void handle_blockage_dme_node(DME_NODE * n1, DME_NODE * n2, DME_NODE * parent, DME_NODE * nb1, DME_NODE * nb2, double b1, double b2, int blockage_index, double middle){$/;"	f
+iblockage	ds.h	/^typedef struct iblockage{$/;"	s
+ibox	ds.h	/^typedef struct ibox{$/;"	s
+ibuffer	ds.h	/^typedef struct ibuffer{$/;"	s
+ibuflib	ds.h	/^typedef struct ibuflib{$/;"	s
+icap	ds.h	/^	int icap ;$/;"	m	struct:ibuffer
+index	ds.h	/^	int index ; $/;"	m	struct:isnode
+initg	connect.h	/^void initg(){$/;"	f
+inode	ds.h	/^typedef struct inode{$/;"	s
+insert_buffer	BufPlace.c	/^void insert_buffer(DME_NODE * L  , BUF_NODE *** OBUF, DME_TREE_NODE ** OT , DME_TREE_NODE *** OTmap){$/;"	f
+inverted	ds.h	/^	int inverted; $/;"	m	struct:ibuffer
+is_blk	ds.h	/^	int	   is_blk ;$/;"	m	struct:dme_tree_node
+is_sink	ds.h	/^	int 	   is_sink ; $/;"	m	struct:dme_tree_node
+isink	ds.h	/^typedef struct isink{$/;"	s
+isit	ds.h	/^	int 	   isit ; $/;"	m	struct:tem_node
+isnode	ds.h	/^typedef struct isnode{$/;"	s
+isource	ds.h	/^typedef struct isource{$/;"	s
+ivddlib	ds.h	/^typedef struct ivddlib{$/;"	s
+iwire	ds.h	/^typedef struct iwire{$/;"	s
+iwirelib	ds.h	/^typedef struct iwirelib{$/;"	s
+lc	ds.h	/^	int lc; $/;"	m	struct:isnode
+left	ds.h	/^	double left;$/;"	m	struct:dme_node
+left	ds.h	/^	int	   left;$/;"	m	struct:dme_tree_node
+lib	ds.h	/^	BUFFER *lib;$/;"	m	struct:ibuflib
+lib	ds.h	/^	WIRE *lib; $/;"	m	struct:iwirelib
+lib	ds.h	/^	double *lib; $/;"	m	struct:ivddlib
+ll	ds.h	/^	NODE ll;$/;"	m	struct:ibox
+location	ds.h	/^	NODE location;$/;"	m	struct:isource
+lower	ds.h	/^	double lower;$/;"	m	struct:dme_node
+ls	ds.h	/^	struct dme_tree_node * ls;$/;"	m	struct:dme_tree_node	typeref:struct:dme_tree_node::dme_tree_node
+main	main.c	/^int main(int argc, char **argv){$/;"	f
+main	test.c	/^int main(){$/;"	f
+max_sink_alt	BufPlace.c	/^double max_sink_alt (double * sink_alt_array, int lnum){$/;"	f
+merge	dme.c	/^void merge(DME_NODE * n1, DME_NODE * n2, DME_NODE * parent, double distance, int blockage_index, int direction){$/;"	f
+merge_neighbor_node	eval2009.pl	/^sub merge_neighbor_node{$/;"	s
+name	ds.h	/^	int name ; $/;"	m	struct:isource
+next	ds.h	/^	int	    next ; $/;"	m	struct:tem_node
+next	ds.h	/^	struct buf_node * next ; $/;"	m	struct:buf_node	typeref:struct:buf_node::buf_node
+node_id	ds.h	/^	int 	   node_id; $/;"	m	struct:dme_tree_node
+node_id	ds.h	/^	int node_id;$/;"	m	struct:dme_node
+num	ds.h	/^	int num; $/;"	m	struct:isink
+num	ds.h	/^	int num;$/;"	m	struct:iblockage
+num	ds.h	/^	int num;$/;"	m	struct:ibuflib
+num	ds.h	/^	int num;$/;"	m	struct:ivddlib
+num	ds.h	/^	int num;$/;"	m	struct:iwirelib
+num_buffer	main.c	/^int num_buffer; $/;"	v
+num_node	main.c	/^int num_node ; $/;"	v
+num_sinknode	main.c	/^int num_sinknode ; $/;"	v
+num_total_nodes	main.c	/^int num_total_nodes ; $/;"	v
+num_wire	main.c	/^int num_wire ; $/;"	v
+ocap	ds.h	/^	int ocap ; $/;"	m	struct:ibuffer
+output_file	io.c	/^void output_file(FILE *fp, BUF_NODE ** OBUF, DME_TREE_NODE * OT, DME_TREE_NODE ** OTmap){$/;"	f
+outputg	connect.h	/^void outputg(){$/;"	f
+pleft	ds.h	/^	struct dme_node * pleft;$/;"	m	struct:dme_node	typeref:struct:dme_node::dme_node
+pool	ds.h	/^	BOX *pool; $/;"	m	struct:iblockage
+pool	ds.h	/^	SNODE *pool ;	$/;"	m	struct:isink
+popFIFO	BufPlace.c	/^int popFIFO(BUF_POS * b){$/;"	f
+popStack	BufPlace.c	/^int 	popStack(){$/;"	f
+poreFIFO	BufPlace.c	/^int poreFIFO(){$/;"	f
+precision	connect.h	/^static int precision=2;$/;"	v
+prev	ds.h	/^	int	    prev ; $/;"	m	struct:tem_node
+pright	ds.h	/^	struct dme_node * pright;$/;"	m	struct:dme_node	typeref:struct:dme_node::dme_node
+print_fig_1	dme.c	/^void print_fig_1(DME_NODE * L, int length){$/;"	f
+print_fig_2	dme.c	/^void print_fig_2(DME_NODE * L, int length){$/;"	f
+print_fig_3	BufPlace.c	/^void print_fig_3(DME_TREE_NODE *Troot , DME_TREE_NODE ** map){$/;"	f
+putFIFO	BufPlace.c	/^void putFIFO(BUF_POS * b, int totalnum){$/;"	f
+putStack	BufPlace.c	/^void putStack(int nd){$/;"	f
+r	ds.h	/^	double r;$/;"	m	struct:iwire
+remove_blocked	dme.c	/^void remove_blocked(DME_NODE * n){$/;"	f
+right	ds.h	/^	double right;$/;"	m	struct:dme_node
+right	ds.h	/^	int	   right; $/;"	m	struct:dme_tree_node
+rs	ds.h	/^	struct dme_tree_node * rs;$/;"	m	struct:dme_tree_node	typeref:struct:dme_tree_node::dme_tree_node
+select_x	ds.h	/^	double select_x;$/;"	m	struct:dme_node
+select_y	ds.h	/^	double select_y;$/;"	m	struct:dme_node
+set	connect.h	/^void set(Pt *p,double xx,double yy){p->x=xx;p->y=yy;}$/;"	f
+settle_DME_tree	BufPlace.c	/^void settle_DME_tree(DME_TREE_NODE * Troot , double  father) { $/;"	f
+sink	main.c	/^SINK sink	; $/;"	v
+sink_index	ds.h	/^	int 	   sink_index ; $/;"	m	struct:dme_tree_node
+sink_index	ds.h	/^	int sink_index;$/;"	m	struct:dme_node
+source	main.c	/^SOURCE source  ;$/;"	v
+spice_subckt	ds.h	/^	char *spice_subckt ; $/;"	m	struct:ibuffer
+tem_node	ds.h	/^typedef struct tem_node{$/;"	s
+test_distance	dme.c	/^double test_distance(DME_NODE * n1, DME_NODE * n2){$/;"	f
+to_sink_delay	ds.h	/^	double to_sink_delay;$/;"	m	struct:dme_node
+trace_back	dme.c	/^void trace_back(DME_NODE * n, DME_NODE * parent){$/;"	f
+upper	ds.h	/^	double upper;$/;"	m	struct:dme_node
+ur	ds.h	/^	NODE ur; $/;"	m	struct:ibox
+vddlib	main.c	/^VDDLIB	vddlib ; $/;"	v
+visited	ds.h	/^	int visited;$/;"	m	struct:dme_node
+weight	ds.h	/^	double weight;$/;"	m	struct:dme_node
+width	connect.h	/^static int width=10;$/;"	v
+wirelib	main.c	/^WIRELIB wirelib;$/;"	v
+wiretype	ds.h	/^	int wiretype ;$/;"	m	struct:iwire
+x	connect.h	/^typedef struct {double x,y;}Pt;$/;"	m	struct:__anon1
+x	ds.h	/^	double  x; $/;"	m	struct:dme_tree_node
+x	ds.h	/^	double x; $/;"	m	struct:tem_node
+x	ds.h	/^	double x;$/;"	m	struct:buf_node
+x	ds.h	/^	int x ;$/;"	m	struct:inode
+x	ds.h	/^	int x; $/;"	m	struct:isnode
+x1	ds.h	/^	double x1;$/;"	m	struct:dme_node
+x2	ds.h	/^	double x2;$/;"	m	struct:dme_node
+y	connect.h	/^typedef struct {double x,y;}Pt;$/;"	m	struct:__anon1
+y	ds.h	/^	double  y; $/;"	m	struct:dme_tree_node
+y	ds.h	/^	double y;$/;"	m	struct:buf_node
+y	ds.h	/^	double y;$/;"	m	struct:tem_node
+y	ds.h	/^	int y ; $/;"	m	struct:inode
+y	ds.h	/^	int y; $/;"	m	struct:isnode
+y1	ds.h	/^	double y1; $/;"	m	struct:dme_node
+y2	ds.h	/^	double y2;$/;"	m	struct:dme_node
