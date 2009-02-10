@@ -6,10 +6,11 @@
 #include "connect.h"
 // ----------------------------------------------------------------//
 // global variables
+const static char *dir_string[]={"-","L","R","U","D"}; // for output
 
+//static int precision=2; // controls double type output precision
 static int width=10;    // controls output width
-static int precision=2; // controls double type output precision
-double **g=NULL;        // a matrix of graph, order = g_size
+UINT ** g =NULL;        // a matrix of graph, order = g_size
 int g_size=0;           // size of g
 DIRECTION ** dirs=NULL; // the move directions between two point,same size as graph
 VSEG * vlist=NULL;	// vertical list
@@ -17,19 +18,19 @@ HSEG * hlist=NULL;      // horizontal list
 int v_size=0;           // size of vlist
 int h_size=0;           // size of hlist
 
-double *shortest=NULL;  // shortest path shortest vector, size = g_size
-int *via=NULL;	        // backtrack vector, size = g_size;
+UINT * shortest=NULL;  // shortest path shortest vector, size = g_size
+UINT * via=NULL;	        // backtrack vector, size = g_size;
 BOOL * mark=NULL;       // mark if a node is visited
 
 // ----------------------------------------------------------------//
 // functions operate on struct
 // set the value of a vertical segment
-void setvseg(VSEG * v,double xx,double yy1,double yy2){
+void setvseg(VSEG * v,UINT xx,UINT yy1,UINT yy2){
 	v->x = xx;
 	v->y1 = yy1; v->y2 = yy2;
 }
 // set the value of a horizontal segment
-void sethseg(HSEG * h,double yy,double xx1,double xx2){
+void sethseg(HSEG * h,UINT yy,UINT xx1,UINT xx2){
 	h->y = yy;
 	h->x1 = xx1; h->x2 = xx2;
 }
@@ -40,8 +41,8 @@ void sethseg(HSEG * h,double yy,double xx1,double xx2){
 // set all the member of the graph matrix to 0
 // REQUIRE: the size of the graph has been set
 void clearg(){
-	int i,j;
-	for(i=0;i<g_size;i++) memset(g[i],0,sizeof(double)*g_size);
+	int i;
+	for(i=0;i<g_size;i++) memset(g[i],0,sizeof(UINT)*g_size);
 }
 
 // allocate space for graph, directions, shortest path, backtrack vector
@@ -49,16 +50,16 @@ void clearg(){
 // n    : number of blockages
 void initg(int n){
 	// allocate space for **g, **dirs, *shortest, *backtrack
-	g_size = n*4+2;
-	g        = (double**) malloc((g_size)*sizeof(double*));
+	g_size   = n*4+2;
+	g        = (UINT**) malloc((g_size)*sizeof(UINT*));
 	dirs     = (DIRECTION**) malloc((g_size)*sizeof(DIRECTION*));
-	shortest = (double *) malloc(g_size * sizeof(double));
-	via      = (int *) malloc(g_size * sizeof(int));
+	shortest = (UINT *) malloc(g_size * sizeof(UINT));
+	via      = (UINT *) malloc(g_size * sizeof(UINT));
 	mark     = (BOOL*) malloc(g_size * sizeof(BOOL));
 
 	int i,j;
 	for(i=0;i<g_size;i++){
-		g[i] = (double *) malloc(g_size*sizeof(double));
+		g[i] = (UINT *) malloc(g_size*sizeof(UINT));
 		dirs[i] = (DIRECTION *) malloc(g_size*sizeof(DIRECTION));
 
 		shortest[i] = INFINITE;
@@ -70,7 +71,7 @@ void initg(int n){
 
 	for(i=0;i<g_size;i++){// initialize the graph to be not connected
 		for(j=0;j<g_size;j++){
-			if(i==j) g[i][j] = 0.0;
+			if(i==j) g[i][j] = 0;
 			else g[i][j] = INFINITE;
 		}
 	}
@@ -81,11 +82,11 @@ void outputg(){
 	int i,j;
 	static char format[20];
 	static char inf_string[20];
-	sprintf(format,"%%%d.%dlf",width,precision); // %10.8lf like format
-	sprintf(inf_string,"%%%ds",width); // %10.8lf like format
+	sprintf(format,"%%%dd",width); // %10d like format
+	sprintf(inf_string,"%%%ds",width); 
 	for(i=0;i<g_size;i++){
 		for(j=0;j<g_size;j++)
-			if( DOUBLE_EQ(g[i][j],INFINITE) )
+			if( g[i][j] == INFINITE )
 				printf(inf_string,"-");
 			else printf(format,g[i][j]);
 		printf("\n");
@@ -99,7 +100,7 @@ void output_dirs(){
 	sprintf(format,"%%%ds",width); 
 	for(i=0;i<g_size;i++){
 		for(j=0;j<g_size;j++){
-			printf(format,dir_string[dirs[i][j]]);
+			printf(format,dir_string[(int)dirs[i][j]]);
 		}
 		printf("\n");
 	}
@@ -111,21 +112,21 @@ void output_dirs(){
 // note: for hor, x1<x2
 //       for ver, y1<y2
 BOOL intersect(HSEG hor,VSEG ver){
-	if( DOUBLE_GT(ver.x,hor.x1) && DOUBLE_LT(ver.x,hor.x2) &&
-	    DOUBLE_GT(hor.y,ver.y1) && DOUBLE_LT(hor.y,ver.y2) )
-	//if( ver.x > hor.x1 && ver.x < hor.x2 &&
-	//   hor.y > ver.y1 && hor.y < ver.y2)
+	//if( DOUBLE_GT(ver.x,hor.x1) && DOUBLE_LT(ver.x,hor.x2) &&
+	//    DOUBLE_GT(hor.y,ver.y1) && DOUBLE_LT(hor.y,ver.y2) )
+	if( ver.x > hor.x1 && ver.x < hor.x2 &&
+	    hor.y > ver.y1 && hor.y < ver.y2)
 		return TRUE;
 	return FALSE;
 }
 
-// determine if two points are reachable in the sense of manhattan distance
+// determine if two points are reach in the sense of manhattan distance
 // REQUIRE: a list of vertical segments
 //          a list of horizontal segments
-// RETURN : their manhattan distance, 
+// RESULT : update their distance in g
 //          and the moving direction from a to b
-//          if not, return a negative double
-double reachable(NODE a,NODE b,int idx_a,int idx_b){
+//          if not, return FALSE
+BOOL reach(NODE a,NODE b,int idx_a,int idx_b){
 	// for each path, traverse all the line segments to see if 
 	// there is intersections
 	// first gen the four segments:
@@ -153,8 +154,8 @@ double reachable(NODE a,NODE b,int idx_a,int idx_b){
 
 	// determine the relative position of two points
 	// and decide which two paths to use
-	if( DOUBLE_LT(a.x,b.x) ){// a is left to b
-		if( DOUBLE_LT(a.y,b.y) ){// a is low-left to b
+	if( a.x<b.x ){// a is left to b
+		if( a.y<b.y ){// a is low-left to b
 			relative = LL;
 			hor[0] = hor1;
 			ver[0] = ver4;
@@ -170,7 +171,7 @@ double reachable(NODE a,NODE b,int idx_a,int idx_b){
 		}
 	}
 	else{// a is right to b
-		if( DOUBLE_LT(a.y,b.y) ){// a is low-right to b
+		if( a.y<b.y ){// a is low-right to b
 			relative = LR;
 			hor[0] = hor1;
 			ver[0] = ver3;
@@ -224,7 +225,8 @@ double reachable(NODE a,NODE b,int idx_a,int idx_b){
 			*a2b = LEFT;  *b2a = UP;
 			break;
 		}
-		return MHT(a,b);
+		g[idx_a][idx_b] = g[idx_b][idx_a] = MHT(a,b);
+		return TRUE;
 	}
 
 	// try path 2:
@@ -258,10 +260,11 @@ double reachable(NODE a,NODE b,int idx_a,int idx_b){
 			*a2b = DOWN;  *b2a = RIGHT;
 			break;
 		}
-		return MHT(a,b);
+		g[idx_a][idx_b] = g[idx_b][idx_a] = MHT(a,b);
+		return TRUE;
 	}
 
-	return -10.0;// neither succeed
+	return FALSE;// neither succeed
 }
 
 // generate four nodes from a block
@@ -293,13 +296,12 @@ int gen_segments(BLOCKAGE * list){
 	vlist = malloc(size * sizeof(VSEG));
 	h_size=v_size=0;
 	int i;
-	NODE node[4];
 	for(i=0;i<list->num;i++){
 		BOX * pb = &list->pool[i];
 		int p=h_size;
 		int q=p+1;
 		// add horizontal segment
-		if( DOUBLE_GT(ABS(pb->ll.y - pb->ur.y),L) ){// height
+		if( ABS(pb->ll.y - pb->ur.y) > L ){// height
 			hlist[p].y = pb->ll.y;
 			hlist[q].y = pb->ur.y;
 			hlist[p].x1 = hlist[q].x1 = pb->ll.x;
@@ -309,7 +311,7 @@ int gen_segments(BLOCKAGE * list){
 		// add vertical segment
 		p=v_size;
 		q=p+1;
-		if( DOUBLE_GT(ABS(pb->ll.x - pb->ur.x),L) ){// width
+		if( ABS(pb->ll.x - pb->ur.x) > L ){// width
 			vlist[p].x = pb->ll.x;
 			vlist[q].x = pb->ur.x;
 			vlist[p].y1 = vlist[q].y1 = pb->ll.y;
@@ -353,13 +355,8 @@ int constructg(BLOCKAGE * list){
 						continue;
 					int idx1 = b_i*4+cor_i;
 					int idx2 = b_j*4+cor_j;
-					double dist = reachable(
-							nodei[cor_i],
-							nodej[cor_j],
-							idx1,idx2);
-					if( dist > -1.0 )
-						g[idx1][idx2] = 
-							g[idx2][idx1] = dist;
+					reach( nodei[cor_i], nodej[cor_j],
+					       idx1,idx2);
 				}
 			}
 		}
@@ -381,10 +378,7 @@ void addpt(NODE pt,int index,BLOCKAGE * list){
 		gen_node(box,corners);
 		for(j=0;j<4;j++){
 			int corner_idx = i*4+j;
-			double dist = reachable(pt,corners[i],
-					index,corner_idx);
-			if( dist > -1.0 )
-				g[index][corner_idx] = g[corner_idx][index] = dist;
+			reach(pt,corners[i], index,corner_idx);
 		}
 	}
 }
@@ -400,20 +394,18 @@ void add2pt(NODE s,NODE t,BLOCKAGE * list){
 	addpt(s,s_idx,list);
 	addpt(t,t_idx,list);
 	// check their connectivity
-	double dist = reachable(s,t,s_idx,t_idx);
-	if( dist > -1.0 )
-		g[s_idx][t_idx] = g[t_idx][s_idx] = dist;
+	reach(s,t,s_idx,t_idx);
 }
 
 // initialize the shortest distance vector from source point
-void init_source(int source){
+void init_source(int src_idx){
 	int i;
 	for(i=0;i<g_size;i++){
-		shortest[i] = g[source][i];
-		if( !DOUBLE_EQ(shortest[i],INFINITE) )
-			via[i] = source;
+		shortest[i] = g[src_idx][i];
+		if( shortest[i] != INFINITE )
+			via[i] = src_idx;
 	}
-	mark[source] = TRUE;
+	mark[src_idx] = TRUE;
 }
 
 // find the shortest path between (last) two points(dijkstra)
@@ -424,11 +416,10 @@ void dijkstra(BLOCKAGE * list,int src_idx){
 	init_source(src_idx);
 	int i,j;
 	for(i=0;i<g_size-1;i++){// traverse all the point in the graph
-		double now_dist = INFINITE;
+		UINT now_dist = INFINITE;
 		int index = -1;
 		for(j=0;j<g_size;j++){// search next point to add
-			if( mark[j] != TRUE && 
-			    DOUBLE_LT(shortest[j],now_dist) ){
+			if( mark[j] != TRUE && shortest[j]<now_dist ){
 				now_dist = shortest[j];
 				index = j;
 			}
@@ -437,9 +428,9 @@ void dijkstra(BLOCKAGE * list,int src_idx){
 		mark[index] = TRUE;
 		// update index
 		for(j=0;j<g_size;j++){
-			double new_dist = shortest[index] + g[index][j];
+			UINT new_dist = shortest[index] + g[index][j];
 			if( mark[j] != TRUE && 
-			    DOUBLE_GE(shortest[j],new_dist) ){
+			    shortest[j]>=new_dist ){// note the '=' here
 				shortest[j] = new_dist;
 				via[j] = index;
 			}
@@ -462,7 +453,6 @@ void destroy_g(){
 
 // free the space allocated for segments, MUST be called at the end
 void destroy_segments(){
-	int i;
 	free(vlist);
 	free(hlist);
 	vlist = NULL; hlist = NULL;
