@@ -1,6 +1,6 @@
 CC=/usr/bin/gcc 
-CFLAGS=-O0 -g -Wall
-SRC=io.c dme.c main.c BufPlace.c connect.c
+CFLAGS=-g -Wall
+SRC=io.c dme.c main.c bufplace.c connect.c
 OBJ=$(SRC:%.c=%.o)
 
 cts : $(OBJ)
@@ -8,9 +8,9 @@ cts : $(OBJ)
 
 test: $(OBJ) $(debug)
 	$(CC) -c $(CFLAGS) test.c
-	$(CC) -o test $(CFLAGS) test.o io.o BufPlace.o connect.o -lm
+	$(CC) -o test $(CFLAGS) test.o io.o bufplace.o connect.o -lm
 	$(CC) -c $(CFLAGS) connect.c -DDEBUG
-	$(CC) -o debug $(CFLAGS) test.o io.o BufPlace.o connect.o -lm -DDEBUG
+	$(CC) -o debug $(CFLAGS) test.o io.o bufplace.o connect.o -lm -DDEBUG
 	ctags -R *
 clean:
 	rm -rf $(OBJ) cts

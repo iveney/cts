@@ -1,7 +1,4 @@
-
-#include "BufPlace.h"
-
-
+#include "bufplace.h"
 
 #define Lsmall 10.0
 #define FIFO_SIZE 100

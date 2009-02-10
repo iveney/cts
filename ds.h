@@ -1,22 +1,30 @@
-
-
 #ifndef BASIC_STRUCTURE_H
 #define BASIC_STRUCTURE_H
 
-#define SMALL_BUF_SIZE 100
-#define LARGE_BUF_SIZE 1000
+#define ABS(a) ((a)<0.0?(-(a)):(a))
+#define MHT(s,t) (ABS((s.x)-(t.x)) + ABS((s.y)-(t.y)))
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #define MIN(a,b) ((a)>(b)?(b):(a))
-#define ELMORE 1
-
-#define OFFSET 100
-
-#define LAMBADA 1250000.00
-//#define LAMBADA 200000.00
-
-
 #define Manhattan(x1,y1,x2,y2) ((( (x1)-(x2) ) >= 0? ((x1)-(x2)) : ((x2)-(x1)))  +  (((y1)-(y2) ) >= 0? ((y1)-(y2)) : ((y2)-(y1))))
 
+#define INFINITE 1E9       // big number to denote infinite
+#define _L_ 10.0
+#define SMALL_BUF_SIZE 100
+#define LARGE_BUF_SIZE 1000
+#define ELMORE 1
+#define OFFSET 100
+#define LAMBADA 1250000.00
+//#define LAMBADA 200000.00
+//
+typedef unsigned long UINT;
+typedef char BOOL;
+typedef struct ver_seg{UINT x,y1,y2; }VSEG;
+typedef struct hor_seg{UINT y,x1,x2; }HSEG;
+typedef char DIRECTION;
+
+enum BOOL_VAL{FALSE,TRUE};
+enum POS{LL,LR,UR,UL}; // low-left, low-right, up-right, up-left
+enum DIRS{INVALID,LEFT,RIGHT,UP,DOWN};
 
 typedef struct inode{
 	int x ;

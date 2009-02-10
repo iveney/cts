@@ -1,5 +1,5 @@
 #include "ds.h"
-#include "BufPlace.h"
+#include "bufplace.h"
 #include<stdio.h>
 #include<stdlib.h>
 #include<math.h>

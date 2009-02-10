@@ -309,7 +309,7 @@ int gen_segments(BLOCKAGE * list){
 		int p=h_size;
 		int q=p+1;
 		// add horizontal segment
-		if( ABS(pb->ll.y - pb->ur.y) > L ){// height
+		if( ABS(pb->ll.y - pb->ur.y) > _L_ ){// height
 			hlist[p].y = pb->ll.y;
 			hlist[q].y = pb->ur.y;
 			hlist[p].x1 = hlist[q].x1 = pb->ll.x;
@@ -319,7 +319,7 @@ int gen_segments(BLOCKAGE * list){
 		// add vertical segment
 		p=v_size;
 		q=p+1;
-		if( ABS(pb->ll.x - pb->ur.x) > L ){// width
+		if( ABS(pb->ll.x - pb->ur.x) > _L_ ){// width
 			vlist[p].x = pb->ll.x;
 			vlist[q].x = pb->ur.x;
 			vlist[p].y1 = vlist[q].y1 = pb->ll.y;
