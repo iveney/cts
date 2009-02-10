@@ -7,6 +7,7 @@ cts : $(OBJ)
 	$(CC) -o $@ $(CFLAGS) $(OBJ) -lm
 
 test: $(OBJ)
+	$(CC) -c $(CFLAGS) test.c
 	$(CC) -o test $(CFLAGS) test.o io.o BufPlace.o connect.o -lm
 	ctags -R *
 clean:

@@ -36,7 +36,18 @@ int main(int argc, char * argv[]){
 	constructg(&blockage);
 	outputg();
 	printf("\n---------------------------------------------------------\n");
-	//output_dirs();
+	output_dirs();
+
+	// input two points
+	NODE s,t;
+	s.x = 0.0; s.y = 40.0;
+	t.x = 55.0;t.y = 40.0;
+	add2pt(s,t,&blockage);
+
+	// (blockage.num - 2) denotes the index of first point
+	dijkstra(&blockage,g_size-2);
+
+	printf("s to t: %lf\n",g[g_size-2][g_size-1]);
 
 	free_all();
 	return 0;
