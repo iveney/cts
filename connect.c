@@ -61,11 +61,6 @@ void initg(int n){
 	for(i=0;i<g_size;i++){
 		g[i] = (UINT *) malloc(g_size*sizeof(UINT));
 		dirs[i] = (DIRECTION *) malloc(g_size*sizeof(DIRECTION));
-
-		shortest[i] = INFINITE;
-		via[i] = -1;
-		mark[i] = FALSE;
-
 		memset(dirs[i],INVALID,g_size*sizeof(DIRECTION)); // INVALID = 0
 	}
 
@@ -411,10 +406,14 @@ void add2pt(NODE s,NODE t,BLOCKAGE * list){
 	reach(s,t,s_idx,t_idx);
 }
 
-// initialize the shortest distance vector from source point
+// initialize the shortest distance,via,mark vector from source point
 void init_source(int src_idx){
 	int i;
 	for(i=0;i<g_size;i++){
+		shortest[i] = INFINITE;
+		via[i] = -1;
+		mark[i] = FALSE;
+
 		shortest[i] = g[src_idx][i];
 		if( shortest[i] != INFINITE )
 			via[i] = src_idx;
@@ -429,6 +428,7 @@ void delpt(int pt_idx,BLOCKAGE * list){
 	for(i=0;i<g_size;i++){
 		g[pt_idx][i] = g[i][pt_idx] = INFINITE;
 		dirs[pt_idx][i] = dirs[i][pt_idx] = INVALID;
+		g[i][i] = 0;
 	}
 }
 

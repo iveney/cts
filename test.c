@@ -46,14 +46,24 @@ int main(int argc, char * argv[]){
 	fscanf(fp,"%lu%lu%lu%lu",&s.x,&s.y,&t.x,&t.y);
 	//s.x = 0; s.y = 40;
 	//t.x = 55;t.y = 45;
-	add2pt(s,t,&blockage);
-
+	/*
 	outputg();
 	printf("\n---------------------------------------------------------\n");
 	output_dirs();
+	add2pt(s,t,&blockage);
+	*/
 
+	/*
+	printf("\n---------------------------------------------------------\n");
+	outputg();
+	printf("\n---------------------------------------------------------\n");
+	output_dirs();
+	*/
+
+	add2pt(s,t,&blockage);
 	delpt(g_size-2,&blockage);
 	delpt(g_size-1,&blockage);
+	add2pt(s,t,&blockage);
 
 	printf("\n---------------------------------------------------------\n");
 	outputg();
@@ -61,7 +71,7 @@ int main(int argc, char * argv[]){
 	output_dirs();
 
 	// (blockage.num - 2) denotes the index of first point
-	/*
+	dijkstra(&blockage,g_size-2);
 	dijkstra(&blockage,g_size-2);
 
 	int i;
@@ -69,7 +79,6 @@ int main(int argc, char * argv[]){
 		printf("%10d",shortest[i]);
 	printf("\n");
 	printf("s to t: %lu\n",(unsigned long)shortest[g_size-1]);
-	*/
 
 	free_all();
 	return 0;
