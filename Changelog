@@ -1,9 +1,22 @@
+TODO:
+<Tue Feb 10 22:18:05 HKT 2009>
+1.write floyd
+2.add a boolean vector to track if a grid in the matrix is occupied by some
+node
+3.modify `addpt' so that it will sweep all elements in the matrix and update
+the distance accordingly(now only handles the 4*block_num,need to update later
+added nodes manually)
+
 PROBLEM:
+
+SOLVED:
 <Mon Feb  9 11:14:32 HKT 2009>
 why the node has point type of `int' but not `double'
 
+changed to UINT = unsigned long now.
+
 IMPROVEMENT:
-note that when determining the intersection
-can sort the list first, and use binary search to see if the segment's two end
+1.note that when determining the intersection
+2.can sort the list first, and use binary search to see if the segment's two end
 will locate in the same position:
 i.e. ... i (p1 p2) i+1 ...

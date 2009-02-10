@@ -422,6 +422,21 @@ void init_source(int src_idx){
 	mark[src_idx] = TRUE;
 }
 
+// delete a point from the constructed graph from blockage list 
+// pt_idx  : the point's index in the graph
+void delpt(int pt_idx,BLOCKAGE * list){
+	int i;
+	for(i=0;i<g_size;i++){
+		g[pt_idx][i] = g[i][pt_idx] = INFINITE;
+		dirs[pt_idx][i] = dirs[i][pt_idx] = INVALID;
+	}
+}
+
+// use floyd to compute all pair's shortest path
+void floyd(BLOCKAGE * list){
+
+}
+
 // find the shortest path between (last) two points(dijkstra)
 // the result is stored shortest path vector and backtrack vector
 // REQUIRE: the g has been constructed
