@@ -19,6 +19,7 @@ int num_wire ;
 int num_sinknode ; 
 int num_total_nodes ; 
 
+extern UINT * shortest;
 
 int main(int argc, char * argv[]){
 	FILE *ifp; 
@@ -34,21 +35,31 @@ int main(int argc, char * argv[]){
 	ofp = fopen(argv[2], "w") ; 
 	printf("%d\n",InputFile(ifp));
 
+	// start to test
 	constructg(&blockage);
+
+	// input two points
+	FILE * fp = fopen("twopt","r");
+	if( fp == NULL )
+		printf("error\n");
+	NODE s,t;
+	fscanf(fp,"%lu%lu%lu%lu",&s.x,&s.y,&t.x,&t.y);
+	//s.x = 0; s.y = 40;
+	//t.x = 55;t.y = 45;
+	add2pt(s,t,&blockage);
+
 	outputg();
 	printf("\n---------------------------------------------------------\n");
 	output_dirs();
 
-	// input two points
-	NODE s,t;
-	s.x = 0.0; s.y = 40.0;
-	t.x = 55.0;t.y = 40.0;
-	add2pt(s,t,&blockage);
-
 	// (blockage.num - 2) denotes the index of first point
 	dijkstra(&blockage,g_size-2);
 
-	printf("s to t: %ld\n",(int)g[g_size-2][g_size-1]);
+	int i;
+	for(i=0;i<g_size;i++)
+		printf("%10d",shortest[i]);
+	printf("\n");
+	printf("s to t: %lu\n",(unsigned long)shortest[g_size-1]);
 
 	free_all();
 	return 0;

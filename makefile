@@ -6,9 +6,11 @@ OBJ=$(SRC:%.c=%.o)
 cts : $(OBJ)
 	$(CC) -o $@ $(CFLAGS) $(OBJ) -lm
 
-test: $(OBJ)
+test: $(OBJ) $(debug)
 	$(CC) -c $(CFLAGS) test.c
 	$(CC) -o test $(CFLAGS) test.o io.o BufPlace.o connect.o -lm
+	$(CC) -c $(CFLAGS) connect.c -DDEBUG
+	$(CC) -o debug $(CFLAGS) test.o io.o BufPlace.o connect.o -lm -DDEBUG
 	ctags -R *
 clean:
 	rm -rf $(OBJ) cts

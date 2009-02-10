@@ -226,6 +226,10 @@ BOOL reach(NODE a,NODE b,int idx_a,int idx_b){
 			break;
 		}
 		g[idx_a][idx_b] = g[idx_b][idx_a] = MHT(a,b);
+#ifdef DEBUG
+		printf("UPDATE : (%d,%d) -> (%d,%d) : %d\n",
+				a.x,a.y,b.x,b.y,g[idx_a][idx_b]);
+#endif
 		return TRUE;
 	}
 
@@ -261,6 +265,10 @@ BOOL reach(NODE a,NODE b,int idx_a,int idx_b){
 			break;
 		}
 		g[idx_a][idx_b] = g[idx_b][idx_a] = MHT(a,b);
+#ifdef DEBUG
+		printf("UPDATE : (%d,%d) -> (%d,%d) : %d\n",
+				a.x,a.y,b.x,b.y,g[idx_a][idx_b]);
+#endif
 		return TRUE;
 	}
 
@@ -373,12 +381,17 @@ int constructg(BLOCKAGE * list){
 void addpt(NODE pt,int index,BLOCKAGE * list){
 	int i,j;
 	NODE corners[4];
-	for(i=0;i<list->num;i++){
+	for(i=0;i<(list->num);i++){
 		BOX * box = &list->pool[i];
 		gen_node(box,corners);
 		for(j=0;j<4;j++){
 			int corner_idx = i*4+j;
-			reach(pt,corners[i], index,corner_idx);
+			BOOL result = reach(pt,corners[j],index,corner_idx);
+#ifdef DEBUG
+			if( result ) printf("(%d,%d) -> (%d,%d) added into graph\n",
+					pt.x,pt.y,
+					corners[j].x,corners[j].y);
+#endif
 		}
 	}
 }
@@ -393,7 +406,8 @@ void add2pt(NODE s,NODE t,BLOCKAGE * list){
 	// add two point first
 	addpt(s,s_idx,list);
 	addpt(t,t_idx,list);
-	// check their connectivity
+
+	// update their connectivity
 	reach(s,t,s_idx,t_idx);
 }
 
@@ -415,7 +429,7 @@ void init_source(int src_idx){
 void dijkstra(BLOCKAGE * list,int src_idx){
 	init_source(src_idx);
 	int i,j;
-	for(i=0;i<g_size-1;i++){// traverse all the point in the graph
+	for(i=0;i<g_size-1;i++){// iteratively add (g_size-1) point in the graph
 		UINT now_dist = INFINITE;
 		int index = -1;
 		for(j=0;j<g_size;j++){// search next point to add

@@ -8,7 +8,7 @@ enum BOOL_VAL{FALSE,TRUE};
 enum POS{LL,LR,UR,UL}; // low-left, low-right, up-right, up-left
 enum DIRS{INVALID,LEFT,RIGHT,UP,DOWN};
 #define ABS(a) ((a)<0.0?(-(a)):(a))
-#define MHT(s,t) (ABS((s.x)-(t.x))+ABS((s.y)-(t.y)))
+#define MHT(s,t) (ABS((s.x)-(t.x)) + ABS((s.y)-(t.y)))
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #define MIN(a,b) ((a)>(b)?(b):(a))
 //#define EPSILON 1E-9   // double type precision
