@@ -881,6 +881,43 @@ void draw_rect(FILE *fp,double llx,double lly,double urx,double ury,int dash,int
 }
 
 void draw_block(FILE *fp,BOX b,int dash,int color){
-	draw_rect(fp,b.ll.x,b.ll.y,b.ur.x,b.ur.y,dash,color);
+	draw_rect(fp,(double)b.ll.x,(double)b.ll.y,(double)b.ur.x,(double)b.ur.y,dash,color);
 }
 
+void draw_blockages(FILE * fp){
+	int i;
+	for(i=0;i<blockage.num;i++)
+		draw_block(fp,blockage.pool[i],SOLID,BLACK);
+}
+
+void draw_sinks(FILE * fp){
+	int i;
+	for(i=0;i<sink.num;i++)
+		draw_point(fp,(double)sink.pool[i].x,(double)sink.pool[i].y,SOLID,RED);
+}
+
+void draw_wire_node(FILE *fp,NODE s,NODE t,int dash, int color){
+	draw_wire(fp,(double)s.x,(double)s.y,(double)t.x,(double)t.y,
+			dash,color);
+}
+
+void draw_line(FILE *fp, double x1, double y1, double x2, double y2, int dash, int colour){
+	double factor , upleft_x, upleft_y,downright_x,downright_y; 	
+
+	if (frame.ur.x != 0)
+		factor = (double)9500 / frame.ur.x;
+	if (factor > 9500 / frame.ur.y)
+		factor = (double)9500 / frame.ur.y; 
+	upleft_x = x1*factor + OFFSET;
+	upleft_y = y1*factor + OFFSET;
+	downright_x = x2 * factor + OFFSET; 
+	downright_y = y2*factor + OFFSET;
+
+	fprintf(fp,"2 1 %d 1 %d 7 50 -1 -1 0 0 0 -1 0 0 2\n", dash,colour);
+	fprintf(fp,"\t%.0f %.0f %.0f %.0f\n",upleft_x,upleft_y,downright_x,downright_y);	
+}
+
+void draw_line_node(FILE *fp,NODE s,NODE t, int dash, int color){
+	draw_line(fp,(double)s.x,(double)s.y,(double)t.x,(double)t.y,
+			dash,color);
+}

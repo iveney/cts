@@ -20,6 +20,9 @@ int num_sinknode ;
 int num_total_nodes ; 
 
 extern UINT * shortest;
+extern int * via;
+extern DIRECTION **dirs;
+extern char **dir_string;
 
 void init_draw(FILE *pFig){
 	fprintf(pFig,"#FIG 3.1\n");
@@ -29,16 +32,46 @@ void init_draw(FILE *pFig){
 	fprintf(pFig,"1200 2\n");
 }
 
-void draw_blockages(FILE * fp){
+void draw_single_source_tree(FILE * pFig,int src_idx,NODE s, NODE t){
 	int i;
+	NODE * node = malloc(g_size*sizeof(NODE));
+	node[g_size-2]=s;
+	node[g_size-1]=t;
 	for(i=0;i<blockage.num;i++)
-		draw_block(fp,blockage.pool[i],SOLID,BLUE);
+		gen_node(&blockage.pool[i],&node[i*4]);
+	for(i=0;i<g_size;i++){
+		if( i != src_idx )
+			draw_line_node(pFig,node[i],node[via[i]],SOLID,BLUE);
+	}
+	free(node);
 }
 
-void draw_sinks(FILE * fp){
+void draw_single_source_rectilinear(FILE * pFig,int src_idx,NODE s,NODE t){
 	int i;
-	for(i=0;i<sink.num;i++)
-		draw_point(fp,(double)sink.pool[i].x,(double)sink.pool[i].y,SOLID,RED);
+	NODE * node = malloc(g_size*sizeof(NODE));
+	node[g_size-2]=s;
+	node[g_size-1]=t;
+	for(i=0;i<blockage.num;i++)
+		gen_node(&blockage.pool[i],&node[i*4]);
+	for(i=0;i<g_size;i++){
+		if( i != src_idx ){
+			int j=via[i];
+			NODE temp;
+			if( dirs[i][j] == UP ||
+			    dirs[i][j] == DOWN ){
+				temp.x = node[i].x;
+				temp.y = node[j].y;
+			}
+			else{
+				temp.x = node[j].x;
+				temp.y = node[i].y;
+			}
+			int idx = (int)(dirs[i][j]) ;
+			draw_line_node(pFig,node[i],temp,SOLID,BLUE);
+			draw_line_node(pFig,node[j],temp,SOLID,BLUE);
+		}
+	}
+	free(node);
 }
 
 int main(int argc, char * argv[]){
@@ -57,31 +90,21 @@ int main(int argc, char * argv[]){
 
 	// start to test
 	constructg(&blockage);
-
-	// input two points
-	FILE * fp = fopen("twopt","r");
-	if( fp == NULL )
-		printf("open twopt error\n");
 	NODE s,t;
-	fscanf(fp,"%lu%lu%lu%lu",&s.x,&s.y,&t.x,&t.y);
-
+	s.x=sink.pool[0].x; s.y=sink.pool[0].y;
+	t.x=sink.pool[1].x; t.y=sink.pool[1].y;
 	add2pt(s,t,&blockage);
+	dijkstra(&blockage,g_size-2);
 	/*
+	int i;
+	for(i=0;i<g_size;i++) printf("%10d",via[i]);
+	for(i=0;i<g_size;i++) printf("%10d",shortest[i]);
+	printf("\n");
+
 	printf("\n---------------------------------------------------------\n");
 	outputg();
 	printf("\n---------------------------------------------------------\n");
 	output_dirs();
-	*/
-
-	// (blockage.num - 2) denotes the index of first point
-	/*
-	dijkstra(&blockage,g_size-2);
-
-	int i;
-	for(i=0;i<g_size;i++)
-		printf("%10d",shortest[i]);
-	printf("\n");
-	printf("s to t: %lu\n",(unsigned long)shortest[g_size-1]);
 	*/
 
 	//////////////////////////////////////////////////////////////////////////
@@ -89,9 +112,9 @@ int main(int argc, char * argv[]){
 	init_draw(pFig);
 	draw_blockages(pFig);
 	draw_sinks(pFig);
+	draw_single_source_rectilinear(pFig,g_size-2,s,t);
 
 	fclose(pFig);
-	fclose(fp);
 	free_all();
 	return 0;
 }

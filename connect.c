@@ -12,7 +12,8 @@
 #include "connect.h"
 // ----------------------------------------------------------------//
 // global variables
-const static char *dir_string[]={"-","L","R","U","D"}; // for output
+const static char **dir_string={"-","L","R","U","D"}; // for output
+
 //static int precision=2; // controls double type output precision
 static int width=10;    // controls output width
 
@@ -61,7 +62,7 @@ void allocate_g(int n){
 	dirs     = (DIRECTION**) malloc((g_size)*sizeof(DIRECTION*));
 	// for dijkstra
 	shortest = (UINT *) malloc(g_size * sizeof(UINT));
-	via      = (UINT *) malloc(g_size * sizeof(UINT));
+	via      = (UINT *) malloc(g_size * sizeof(int));
 	mark     = (BOOL*) malloc(g_size * sizeof(BOOL));
 	// for floyd
 	shortest_pair = NULL;
