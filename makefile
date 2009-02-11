@@ -16,4 +16,4 @@ test: $(OBJ) $(debug)
 	ctags -R *
 
 clean:
-	rm -rf $(OBJ) cts
+	rm -rf *.o cts test
