@@ -6,6 +6,8 @@
 #include "bufplace.h"
 #include "io.h"
 
+#define test
+
 BOX frame	; 
 SOURCE source  ;
 SINK sink	; 
