@@ -1,0 +1,8 @@
+*.out
+*.o
+*.swp
+main
+cts
+test
+tags
+debug
