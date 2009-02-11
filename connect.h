@@ -15,8 +15,13 @@
 typedef struct ver_seg{UINT x,y1,y2; }VSEG;
 typedef struct hor_seg{UINT y,x1,x2; }HSEG;
 
-extern UINT **g;
-extern int g_size;
+UINT **g;
+int g_size;
+UINT * shortest;
+int * via;
+BOOL * mark;
+DIRECTION ** dirs;
+
 void setvseg(VSEG *v, UINT xx, UINT yy1, UINT yy2);
 void sethseg(HSEG *h, UINT yy, UINT xx1, UINT xx2);
 void allocate_g(int n);

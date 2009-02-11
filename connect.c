@@ -8,11 +8,12 @@
 #include <stdlib.h>
 #include <memory.h>
 #include <string.h>
+#include "util.h"
 #include "ds.h"
 #include "connect.h"
 // ----------------------------------------------------------------//
 // global variables
-const static char **dir_string={"-","L","R","U","D"}; // for output
+const static char *dir_string[]={"-","L","R","U","D"}; // for output
 
 //static int precision=2; // controls double type output precision
 static int width=10;    // controls output width
@@ -30,7 +31,7 @@ int h_size=0;           // size of hlist
 
 // variables for dijkstra
 UINT * shortest=NULL;   // shortest path shortest vector, size = g_size
-int * via=NULL;	// backtrack vector, size = g_size;
+int * via=NULL;	        // backtrack vector, size = g_size;
 BOOL * mark=NULL;       // mark if a node is visited
 
 // variables for floyd
@@ -62,7 +63,7 @@ void allocate_g(int n){
 	dirs     = (DIRECTION**) malloc((g_size)*sizeof(DIRECTION*));
 	// for dijkstra
 	shortest = (UINT *) malloc(g_size * sizeof(UINT));
-	via      = (UINT *) malloc(g_size * sizeof(int));
+	via      = (int *) malloc(g_size * sizeof(int));
 	mark     = (BOOL*) malloc(g_size * sizeof(BOOL));
 	// for floyd
 	shortest_pair = NULL;
@@ -475,10 +476,9 @@ void dijkstra(BLOCKAGE * list,int src_idx){
 				index = j;
 			}
 		}
-		if( index == -1 ){
-			fprintf(stderr,"sth. wrong happens in dijkstra\n");
-			exit(1);
-		}
+		if( index == -1 )
+			report_exit("sth. wrong happens in dijkstra");
+
 		// now add this point 
 		mark[index] = TRUE;
 		// update index
