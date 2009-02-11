@@ -14,12 +14,15 @@
 #define ELMORE 1
 #define OFFSET 100
 #define LAMBADA 1250000.00
+
 //#define LAMBADA 200000.00
 //
 typedef unsigned long UINT;
 typedef char BOOL;
 typedef char DIRECTION;
 
+enum LINE_STYLE{SOLID,Dashed};
+enum COLORS{BLACK,BLUE,GREEN,CYAN,RED,WHITE};
 enum BOOL_VAL{FALSE,TRUE};
 enum POS{LL,LR,UR,UL}; // low-left, low-right, up-right, up-left
 enum DIRS{INVALID,LEFT,RIGHT,UP,DOWN};

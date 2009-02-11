@@ -18,7 +18,9 @@ static int width=10;    // controls output width
 
 // variables for graph
 UINT ** g =NULL;        // a matrix of graph, order = g_size
-int g_size=0;           // size of g
+BOOL ** occupy=NULL;    // mark if g[i][j] is occupied by a node
+int g_size=0;           // current size of g
+int g_total_size=0;     // total size of g
 DIRECTION ** dirs=NULL; // the move directions between two point,same size as graph
 VSEG * vlist=NULL;	// vertical list
 HSEG * hlist=NULL;      // horizontal list
@@ -26,9 +28,13 @@ int v_size=0;           // size of vlist
 int h_size=0;           // size of hlist
 
 // variables for dijkstra
-UINT * shortest=NULL;  // shortest path shortest vector, size = g_size
-UINT * via=NULL;	        // backtrack vector, size = g_size;
+UINT * shortest=NULL;   // shortest path shortest vector, size = g_size
+int * via=NULL;	// backtrack vector, size = g_size;
 BOOL * mark=NULL;       // mark if a node is visited
+
+// variables for floyd
+UINT *** shortest_pair = NULL;  // shortest pair matrix
+int *** backtrack_pair= NULL;  // backmatrix
 
 // ----------------------------------------------------------------//
 // functions operate on struct
@@ -50,13 +56,16 @@ void sethseg(HSEG * h,UINT yy,UINT xx1,UINT xx2){
 // set all members of the graph matrix to INFINITE except the diagnal
 // n    : number of blockages
 void allocate_g(int n){
-	// allocate space for **g, **dirs, *shortest, *backtrack
 	g_size   = n*4+2;
 	g        = (UINT**) malloc((g_size)*sizeof(UINT*));
 	dirs     = (DIRECTION**) malloc((g_size)*sizeof(DIRECTION*));
+	// for dijkstra
 	shortest = (UINT *) malloc(g_size * sizeof(UINT));
 	via      = (UINT *) malloc(g_size * sizeof(UINT));
 	mark     = (BOOL*) malloc(g_size * sizeof(BOOL));
+	// for floyd
+	shortest_pair = NULL;
+	backtrack_pair= NULL;
 
 	int i;
 	for(i=0;i<g_size;i++){
@@ -267,7 +276,7 @@ BOOL reach(NODE a,NODE b,int idx_a,int idx_b){
 		}
 		g[idx_a][idx_b] = g[idx_b][idx_a] = MHT(a,b);
 #ifdef DEBUG
-		printf("UPDATE : (%d,%d) -> (%d,%d) : %d\n",
+		printf("UPDATE : (%lu,%lu) -> (%lu,%lu) : %lu\n",
 				a.x,a.y,b.x,b.y,g[idx_a][idx_b]);
 #endif
 		return TRUE;
@@ -440,6 +449,10 @@ void delpt(int pt_idx,BLOCKAGE * list){
 	}
 }
 
+// initialize floyd
+void init_all_pair(){
+}
+
 // use floyd to compute all pair's shortest path
 void floyd(BLOCKAGE * list){
 
@@ -491,7 +504,12 @@ void destroy_g(){
 	}
 	free(g);
 	free(dirs);
+
+	free(shortest_pair);
+	free(backtrack_pair);
+
 	g = NULL; dirs = NULL; via = NULL; shortest = NULL; mark = NULL;
+	shortest_pair = NULL; backtrack_pair = NULL;
 }
 
 // free the space allocated for segments, MUST be called at the end

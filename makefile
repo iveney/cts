@@ -7,6 +7,7 @@ cts : $(OBJ)
 	$(CC) -o $@ $(CFLAGS) $(OBJ) -lm
 
 test: $(OBJ) $(debug)
+	$(CC) -c $(CFLAGS) connect.c 
 	$(CC) -c $(CFLAGS) test.c
 	$(CC) -o test $(CFLAGS) test.o io.o bufplace.o connect.o -lm
 	$(CC) -c $(CFLAGS) connect.c -DDEBUG

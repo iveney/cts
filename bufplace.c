@@ -1,15 +1,9 @@
+#include "ds.h"
 #include "bufplace.h"
 
 #define Lsmall 10.0
 #define FIFO_SIZE 100
 #define STACK_SIZE 100
-#define BLACK 0
-#define BLUE	  1
-#define GREEN 2
-#define CYAN	  3
-#define RED	  4
-#define WHITE  7 
-#define Dashed 1
 #define SOLID   0
 #define MAX_DOUBLE 9999999999999.99
 
@@ -416,11 +410,12 @@ int 	popStack(){
 
 void draw_point( FILE *fp , double x1, double y1, int dash, int colour){
 double factor , upleft_x, upleft_y; 	
+//printf("%lf %lf\n",x1,y1);
 	if (frame.ur.x != 0)
-		factor = (double)9500 / frame.ur.x;
+		factor = (double)9500.0 / frame.ur.x;
 
-	if (factor > 9500 / frame.ur.y)
-		factor = (double)9500 / frame.ur.y;	
+	if (factor > 9500.0 / frame.ur.y)
+		factor = (double)9500.0 / frame.ur.y;	
 	upleft_x = x1*factor + OFFSET;
 	upleft_y = y1*factor + OFFSET;
 	fprintf(fp,"1 3 %d 1 %d 7 50 -1 -1 0 1 0 %.0f %.0f 40 40 %.0f %.0f %.0f %.0f\n",dash,colour, upleft_x,upleft_y,upleft_x,upleft_y,upleft_x,upleft_y+40);
@@ -431,9 +426,9 @@ void draw_wire(FILE *fp, double x1, double y1, double x2, double y2, int dash, i
 double factor , upleft_x, upleft_y,downright_x,downright_y; 	
 double mid_x , mid_y ; 
 		if (frame.ur.x != 0)
-			factor = (double)9500 / frame.ur.x;
-		if (factor > 9500 / frame.ur.y)
-			factor = (double)9500 / frame.ur.y; 
+			factor = (double)9500.0 / frame.ur.x;
+		if (factor > 9500.0 / frame.ur.y)
+			factor = (double)9500.0 / frame.ur.y; 
 		upleft_x = x1*factor + OFFSET;
 		upleft_y = y1*factor + OFFSET;
 		downright_x = x2 * factor + OFFSET; 
@@ -478,10 +473,10 @@ void print_fig_3(DME_TREE_NODE *Troot , DME_TREE_NODE ** map){
 	
 	
 	if (frame.ur.x != 0)
-		factor = (double)9500 / frame.ur.x;
+		factor = (double)9500.0 / frame.ur.x;
 
-	if (factor > 9500 / frame.ur.y)
-		factor = (double)9500 / frame.ur.y;
+	if (factor > 9500.0 / frame.ur.y)
+		factor = (double)9500.0 / frame.ur.y;
 // 	printf("%f\n",factor);
 	fprintf(fp,"#FIG 3.1\n");
 	fprintf(fp,"Landscape\n");
@@ -877,7 +872,15 @@ DME_TREE_NODE ** DME_tree_map1 ;
 
 }
 
+void draw_rect(FILE *fp,double llx,double lly,double urx,double ury,int dash,int color){
+	draw_wire(fp,llx,lly,urx,lly,dash,color);
+	draw_wire(fp,llx,ury,urx,ury,dash,color);
 
+	draw_wire(fp,llx,lly,llx,ury,dash,color);
+	draw_wire(fp,urx,lly,urx,ury,dash,color);
+}
 
-
+void draw_block(FILE *fp,BOX b,int dash,int color){
+	draw_rect(fp,b.ll.x,b.ll.y,b.ur.x,b.ur.y,dash,color);
+}
 
