@@ -1,3 +1,9 @@
+// ----------------------------------------------------------------//
+// connect.c
+// Author : Xiao Zigang
+// Modifed: <Wed Feb 11 10:48:54 HKT 2009> 
+// ----------------------------------------------------------------//
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
@@ -7,9 +13,10 @@
 // ----------------------------------------------------------------//
 // global variables
 const static char *dir_string[]={"-","L","R","U","D"}; // for output
-
 //static int precision=2; // controls double type output precision
 static int width=10;    // controls output width
+
+// variables for graph
 UINT ** g =NULL;        // a matrix of graph, order = g_size
 int g_size=0;           // size of g
 DIRECTION ** dirs=NULL; // the move directions between two point,same size as graph
@@ -18,6 +25,7 @@ HSEG * hlist=NULL;      // horizontal list
 int v_size=0;           // size of vlist
 int h_size=0;           // size of hlist
 
+// variables for dijkstra
 UINT * shortest=NULL;  // shortest path shortest vector, size = g_size
 UINT * via=NULL;	        // backtrack vector, size = g_size;
 BOOL * mark=NULL;       // mark if a node is visited
@@ -38,17 +46,10 @@ void sethseg(HSEG * h,UINT yy,UINT xx1,UINT xx2){
 // ----------------------------------------------------------------//
 // functions
 
-// set all the member of the graph matrix to 0
-// REQUIRE: the size of the graph has been set
-void clearg(){
-	int i;
-	for(i=0;i<g_size;i++) memset(g[i],0,sizeof(UINT)*g_size);
-}
-
 // allocate space for graph, directions, shortest path, backtrack vector
 // set all members of the graph matrix to INFINITE except the diagnal
 // n    : number of blockages
-void initg(int n){
+void allocate_g(int n){
 	// allocate space for **g, **dirs, *shortest, *backtrack
 	g_size   = n*4+2;
 	g        = (UINT**) malloc((g_size)*sizeof(UINT*));
@@ -57,17 +58,22 @@ void initg(int n){
 	via      = (UINT *) malloc(g_size * sizeof(UINT));
 	mark     = (BOOL*) malloc(g_size * sizeof(BOOL));
 
-	int i,j;
+	int i;
 	for(i=0;i<g_size;i++){
 		g[i] = (UINT *) malloc(g_size*sizeof(UINT));
 		dirs[i] = (DIRECTION *) malloc(g_size*sizeof(DIRECTION));
-		memset(dirs[i],INVALID,g_size*sizeof(DIRECTION)); // INVALID = 0
 	}
+}
 
-	for(i=0;i<g_size;i++){// initialize the graph to be not connected
+// initialize the graph to be not connected
+// the directions between points are INVALID
+void init_g(){
+	int i,j;
+	for(i=0;i<g_size;i++){
 		for(j=0;j<g_size;j++){
 			if(i==j) g[i][j] = 0;
 			else g[i][j] = INFINITE;
+			dirs[i][j] = INVALID;
 		}
 	}
 }
@@ -222,7 +228,7 @@ BOOL reach(NODE a,NODE b,int idx_a,int idx_b){
 		}
 		g[idx_a][idx_b] = g[idx_b][idx_a] = MHT(a,b);
 #ifdef DEBUG
-		printf("UPDATE : (%d,%d) -> (%d,%d) : %d\n",
+		printf("UPDATE : (%lu,%lu) -> (%lu,%lu) : %lu\n",
 				a.x,a.y,b.x,b.y,g[idx_a][idx_b]);
 #endif
 		return TRUE;
@@ -330,7 +336,8 @@ int gen_segments(BLOCKAGE * list){
 // REQUIRE: external storage g
 // list : pointer to BLOCKAGE
 int constructg(BLOCKAGE * list){
-	initg(list->num); // initialize the elements
+	allocate_g(list->num);
+	init_g();  // initialize the elements
 	gen_segments(list); // generate segments from blockages
 
 	// start to construct the graph 
@@ -381,7 +388,8 @@ void addpt(NODE pt,int index,BLOCKAGE * list){
 		gen_node(box,corners);
 		for(j=0;j<4;j++){
 			int corner_idx = i*4+j;
-			BOOL result = reach(pt,corners[j],index,corner_idx);
+			BOOL result;
+			result = reach(pt,corners[j],index,corner_idx);
 #ifdef DEBUG
 			if( result ) printf("(%d,%d) -> (%d,%d) added into graph\n",
 					pt.x,pt.y,
@@ -407,7 +415,7 @@ void add2pt(NODE s,NODE t,BLOCKAGE * list){
 }
 
 // initialize the shortest distance,via,mark vector from source point
-void init_source(int src_idx){
+void init_single_source(int src_idx){
 	int i;
 	for(i=0;i<g_size;i++){
 		shortest[i] = INFINITE;
@@ -442,7 +450,7 @@ void floyd(BLOCKAGE * list){
 // REQUIRE: the g has been constructed
 // RETURN : 
 void dijkstra(BLOCKAGE * list,int src_idx){
-	init_source(src_idx);
+	init_single_source(src_idx);
 	int i,j;
 	for(i=0;i<g_size-1;i++){// iteratively add (g_size-1) point in the graph
 		UINT now_dist = INFINITE;
@@ -453,13 +461,17 @@ void dijkstra(BLOCKAGE * list,int src_idx){
 				index = j;
 			}
 		}
+		if( index == -1 ){
+			fprintf(stderr,"sth. wrong happens in dijkstra\n");
+			exit(1);
+		}
 		// now add this point 
 		mark[index] = TRUE;
 		// update index
 		for(j=0;j<g_size;j++){
 			UINT new_dist = shortest[index] + g[index][j];
 			if( mark[j] != TRUE && 
-			    shortest[j]>=new_dist ){// note the '=' here
+			    shortest[j]>new_dist ){// note:NO '=' here
 				shortest[j] = new_dist;
 				via[j] = index;
 			}
@@ -477,6 +489,8 @@ void destroy_g(){
 		free(g[i]);
 		free(dirs[i]);
 	}
+	free(g);
+	free(dirs);
 	g = NULL; dirs = NULL; via = NULL; shortest = NULL; mark = NULL;
 }
 

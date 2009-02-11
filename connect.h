@@ -11,13 +11,16 @@
 //#define DOUBLE_GE(a,b) ( ((a)>((b)-EPSILON))?TRUE:FALSE )
 //#define DOUBLE_LT(a,b) ( ((a)<((b)-EPSILON))?TRUE:FALSE )
 //#define DOUBLE_LE(a,b) ( ((a)<((b)+EPSILON))?TRUE:FALSE )
+//
+typedef struct ver_seg{UINT x,y1,y2; }VSEG;
+typedef struct hor_seg{UINT y,x1,x2; }HSEG;
 
 extern UINT **g;
 extern int g_size;
 void setvseg(VSEG *v, UINT xx, UINT yy1, UINT yy2);
 void sethseg(HSEG *h, UINT yy, UINT xx1, UINT xx2);
-void clearg(void);
-void initg(int n);
+void allocate_g(int n);
+void init_g(void);
 void outputg(void);
 void output_dirs(void);
 BOOL intersect(HSEG hor, VSEG ver);
@@ -27,9 +30,12 @@ int gen_segments(BLOCKAGE *list);
 int constructg(BLOCKAGE *list);
 void addpt(NODE pt, int index, BLOCKAGE *list);
 void add2pt(NODE s, NODE t, BLOCKAGE *list);
-void init_source(int src_idx);
+void init_single_source(int src_idx);
+void delpt(int pt_idx, BLOCKAGE *list);
+void floyd(BLOCKAGE *list);
 void dijkstra(BLOCKAGE *list, int src_idx);
 void destroy_g(void);
 void destroy_segments(void);
 void free_all(void);
+
 #endif

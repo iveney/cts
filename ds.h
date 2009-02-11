@@ -7,7 +7,7 @@
 #define MIN(a,b) ((a)>(b)?(b):(a))
 #define Manhattan(x1,y1,x2,y2) ((( (x1)-(x2) ) >= 0? ((x1)-(x2)) : ((x2)-(x1)))  +  (((y1)-(y2) ) >= 0? ((y1)-(y2)) : ((y2)-(y1))))
 
-#define INFINITE 1E9       // big number to denote infinite
+#define INFINITE 2<<30 // big number to denote infinite
 #define _L_ 10.0
 #define SMALL_BUF_SIZE 100
 #define LARGE_BUF_SIZE 1000
@@ -18,8 +18,6 @@
 //
 typedef unsigned long UINT;
 typedef char BOOL;
-typedef struct ver_seg{UINT x,y1,y2; }VSEG;
-typedef struct hor_seg{UINT y,x1,x2; }HSEG;
 typedef char DIRECTION;
 
 enum BOOL_VAL{FALSE,TRUE};
