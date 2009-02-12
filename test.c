@@ -6,8 +6,6 @@
 #include "bufplace.h"
 #include "io.h"
 
-#define test
-
 BOX frame	; 
 SOURCE source  ;
 SINK sink	; 
@@ -45,23 +43,26 @@ int main(int argc, char * argv[]){
 		report_exit("Error reading file");
 
 	// start to test
-	constructg(&blockage);
+	construct_g_all(&blockage,&sink);
+	printf("\n---------------------------------------------------------\n");
+	outputg();
+	printf("\n---------------------------------------------------------\n");
+	output_dirs();
+
+	/*
 	NODE s,t;
 	s.x=sink.pool[0].x; s.y=sink.pool[0].y;
 	t.x=sink.pool[1].x; t.y=sink.pool[1].y;
 	add2pt(s,t,&blockage);
-	dijkstra(&blockage,g_size-2);
+	*/
+	dijkstra(&blockage,blockage.num);
 	/*
 	int i;
 	for(i=0;i<g_size;i++) printf("%10d",via[i]);
 	for(i=0;i<g_size;i++) printf("%10d",shortest[i]);
 	printf("\n");
 
-	printf("\n---------------------------------------------------------\n");
-	outputg();
-	printf("\n---------------------------------------------------------\n");
-	output_dirs();
-	*/
+		*/
 
 	//////////////////////////////////////////////////////////////////////////
 	// write results into file
@@ -69,7 +70,7 @@ int main(int argc, char * argv[]){
 	init_draw(pFig);
 	draw_blockages(pFig);
 	draw_sinks(pFig);
-	draw_single_source_rectilinear(pFig,g_size-2,s,t);
+	//draw_single_source_rectilinear(pFig,g_size-2,s,t);
 
 	fclose(pFig);
 	free_all();
