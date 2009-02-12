@@ -15,14 +15,26 @@
 typedef struct ver_seg{UINT x,y1,y2; }VSEG;
 typedef struct hor_seg{UINT y,x1,x2; }HSEG;
 
-UINT **g;
-int g_size;
-UINT * shortest;
-int * via;
-BOOL * mark;
-DIRECTION ** dirs;
 
 /* connect.c */
+UINT **g;
+int g_size;
+UINT *shortest;
+int *via;
+BOOL *mark;
+DIRECTION **dirs;
+NODE *g_node;
+BOOL *g_occupy;
+NODE *sink_node;
+int block_num;
+int sink_num;
+int g_num;
+VSEG *vlist;
+HSEG *hlist;
+int v_size;
+int h_size;
+UINT ***shortest_pair;
+int ***backtrack_pair;
 void setvseg(VSEG *v, UINT xx, UINT yy1, UINT yy2);
 void sethseg(HSEG *h, UINT yy, UINT xx1, UINT xx2);
 void allocate_g(int n);

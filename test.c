@@ -30,6 +30,12 @@ void init_draw(FILE *pFig){
 	fprintf(pFig,"1200 2\n");
 }
 
+void draw_case(FILE * pFig){
+	init_draw(pFig);
+	draw_blockages(pFig);
+	draw_sinks(pFig);
+}
+
 int main(int argc, char * argv[]){
 	FILE *ifp,*ofp; 
 	BUF_NODE ** OBUF;  
@@ -49,13 +55,12 @@ int main(int argc, char * argv[]){
 	printf("\n---------------------------------------------------------\n");
 	output_dirs();
 
-	/*
 	NODE s,t;
 	s.x=sink.pool[0].x; s.y=sink.pool[0].y;
 	t.x=sink.pool[1].x; t.y=sink.pool[1].y;
-	add2pt(s,t,&blockage);
-	*/
-	dijkstra(&blockage,blockage.num);
+	//add2pt(s,t,&blockage);
+	int src_idx=block_num*4+1;
+	dijkstra(&blockage,src_idx);
 	/*
 	int i;
 	for(i=0;i<g_size;i++) printf("%10d",via[i]);
@@ -67,12 +72,15 @@ int main(int argc, char * argv[]){
 	//////////////////////////////////////////////////////////////////////////
 	// write results into file
 	FILE * pFig = fopen("fig","w");
-	init_draw(pFig);
-	draw_blockages(pFig);
-	draw_sinks(pFig);
-	//draw_single_source_rectilinear(pFig,g_size-2,s,t);
+	FILE * pFig_rect = fopen("fig2","w");
+	draw_case(pFig);
+	draw_case(pFig_rect);
+
+	draw_single_source_tree(pFig,src_idx);
+	draw_single_source_rectilinear(pFig_rect,src_idx);
 
 	fclose(pFig);
+	fclose(pFig_rect);
 	free_all();
 	return 0;
 }

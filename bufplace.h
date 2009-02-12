@@ -14,6 +14,8 @@ void draw_block(FILE *fp,BOX b,int dash,int color);
 void draw_rect(FILE *fp,double llx,double lly,double urx,double ury,int dash,int color);
 void draw_blockages(FILE * fp);
 void draw_sinks(FILE * fp);
-void draw_single_source_rectilinear(FILE * pFig,int src_idx,NODE s,NODE t);
+
+void draw_single_source_tree(FILE * pFig,int src_idx);
+void draw_single_source_rectilinear(FILE * pFig,int src_idx);
 
 #endif

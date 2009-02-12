@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "ds.h"
 #include "connect.h"
 #include "bufplace.h"
@@ -924,46 +925,37 @@ void draw_line_node(FILE *fp,NODE s,NODE t, int dash, int color){
 }
 
 // testing function: draw the shortest path tree( may not be rectlinear)
-void draw_single_source_tree(FILE * pFig,int src_idx,NODE s, NODE t){
+void draw_single_source_tree(FILE * pFig,int src_idx){
 	int i;
-	NODE * node = malloc(g_size*sizeof(NODE));
-	node[g_size-2]=s;
-	node[g_size-1]=t;
-	for(i=0;i<blockage.num;i++)
-		gen_node(&blockage.pool[i],&node[i*4]);
 	for(i=0;i<g_size;i++){
-		if( i != src_idx )
-			draw_line_node(pFig,node[i],node[via[i]],SOLID,BLUE);
+		if( g_occupy[i] == TRUE && i != src_idx )
+			draw_line_node(pFig,g_node[i],g_node[via[i]],SOLID,BLUE);
 	}
-	free(node);
 }
 
 // testing function: draw the rectilinear shortest path we found
-void draw_single_source_rectilinear(FILE * pFig,int src_idx,NODE s,NODE t){
+// pFig    : the FILE object to write to
+// src_idx : the source point
+// s,t     : the last two node
+void draw_single_source_rectilinear(FILE * pFig,int src_idx){
 	int i;
-	NODE * node = malloc(g_size*sizeof(NODE));
-	node[g_size-2]=s;
-	node[g_size-1]=t;
-	for(i=0;i<blockage.num;i++)
-		gen_node(&blockage.pool[i],&node[i*4]);
 	for(i=0;i<g_size;i++){
-		if( i != src_idx ){
+		if( g_occupy[i] == TRUE && i != src_idx ){
 			int j=via[i];
 			NODE temp;
 			if( dirs[i][j] == UP ||
 			    dirs[i][j] == DOWN ){
-				temp.x = node[i].x;
-				temp.y = node[j].y;
+				temp.x = g_node[i].x;
+				temp.y = g_node[j].y;
 			}
 			else{
-				temp.x = node[j].x;
-				temp.y = node[i].y;
+				temp.x = g_node[j].x;
+				temp.y = g_node[i].y;
 			}
 			int idx = (int)(dirs[i][j]) ;
-			draw_line_node(pFig,node[i],temp,SOLID,BLUE);
-			draw_line_node(pFig,node[j],temp,SOLID,BLUE);
+			draw_line_node(pFig,g_node[i],temp,SOLID,BLUE);
+			draw_line_node(pFig,g_node[j],temp,SOLID,BLUE);
 		}
 	}
-	free(node);
 }
 
