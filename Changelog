@@ -1,19 +1,21 @@
 TODO:
 <Tue Feb 10 22:18:05 HKT 2009>
 1.write floyd
-2.add a boolean vector to track if a grid in the matrix is occupied by some
-node
-3.modify `addpt' so that it will sweep all elements in the matrix and update
-the distance accordingly(now only handles the 4*block_num,need to update later
-added nodes manually)
 
 PROBLEM:
 
 SOLVED:
 <Mon Feb  9 11:14:32 HKT 2009>
 why the node has point type of `int' but not `double'
-
 changed to UINT = unsigned long now.
+
+<Thu Feb 12 22:58:02 HKT 2009>
+add a boolean vector to track if a grid in the matrix is occupied by some
+node
+
+modify `addpt' so that it will sweep all elements in the matrix and update
+the distance accordingly(now only handles the 4*block_num,need to update later
+added nodes manually)
 
 IMPROVEMENT:
 1.note that when determining the intersection

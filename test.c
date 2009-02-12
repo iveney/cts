@@ -38,9 +38,6 @@ void draw_case(FILE * pFig){
 
 int main(int argc, char * argv[]){
 	FILE *ifp,*ofp; 
-	BUF_NODE ** OBUF;  
-	DME_TREE_NODE * OT ;
-	DME_TREE_NODE ** OTmap ; 
 	if(argc > 3 || argc < 2)
 		report_exit("error: command inputfile");
 	ifp = fopen(argv[1], "r") ; 
@@ -48,36 +45,55 @@ int main(int argc, char * argv[]){
 	if( InputFile(ifp) != 1 )
 		report_exit("Error reading file");
 
+	/*
+	int **_out[2];
+	int ***out=_out;
+	int x,y,z;
+	int dim1=3,dim2=10,dim3=5;
+	for(x=0;x<dim1;x++){
+		out[x]=(int**)malloc(sizeof(int**)*dim2);
+		for(y=0;y<dim2;y++){
+			out[x][y]=(int*)malloc(sizeof(int*)*dim3);
+			for(z=0;z<dim3;z++){
+				out[x][y][z]=x*dim3*dim2+y*dim3+z;
+				printf("%10d",out[x][y][z]);
+			}
+			printf("\n");
+		}
+		printf("\n\n\n\n");
+	}
+	*/
+
 	// start to test
 	construct_g_all(&blockage,&sink);
+	/*
+	 // check construct_g_all output
 	printf("\n---------------------------------------------------------\n");
 	outputg();
 	printf("\n---------------------------------------------------------\n");
 	output_dirs();
+	*/
 
-	NODE s,t;
-	s.x=sink.pool[0].x; s.y=sink.pool[0].y;
-	t.x=sink.pool[1].x; t.y=sink.pool[1].y;
-	//add2pt(s,t,&blockage);
-	int src_idx=block_num*4+1;
-	dijkstra(&blockage,src_idx);
+	//int src_idx=block_num*4+1;
+	//dijkstra(&blockage,src_idx);
 	/*
+	// check dijkstra's output
 	int i;
 	for(i=0;i<g_size;i++) printf("%10d",via[i]);
 	for(i=0;i<g_size;i++) printf("%10d",shortest[i]);
 	printf("\n");
-
-		*/
+	*/
 
 	//////////////////////////////////////////////////////////////////////////
 	// write results into file
+	UINT ** p = floyd();
 	FILE * pFig = fopen("fig","w");
 	FILE * pFig_rect = fopen("fig2","w");
 	draw_case(pFig);
 	draw_case(pFig_rect);
 
-	draw_single_source_tree(pFig,src_idx);
-	draw_single_source_rectilinear(pFig_rect,src_idx);
+	//draw_single_source_tree(pFig,src_idx);
+	//draw_single_source_rectilinear(pFig_rect,src_idx);
 
 	fclose(pFig);
 	fclose(pFig_rect);

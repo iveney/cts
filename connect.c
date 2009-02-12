@@ -38,9 +38,11 @@ UINT * shortest=NULL;   // shortest path shortest vector, size = g_size
 int * via=NULL;	        // backtrack vector, size = g_size;
 BOOL * mark=NULL;       // mark if a node is visited
 
-// variables for floyd
-UINT *** shortest_pair = NULL;  // shortest pair matrix
-int *** backtrack_pair= NULL;   // backmatrix
+// variables for floyd, use swtich array technique
+// size should be 2 * g_size * g_size
+UINT **shortest_pair[2]={NULL,NULL};   // shortest pair matrix
+int ** backtrack_pair[2]={NULL,NULL};  // backmatrix
+//int turn=0;                // variable to control switch turn
 
 // ----------------------------------------------------------------//
 // functions operate on struct
@@ -62,20 +64,29 @@ void sethseg(HSEG * h,UINT yy,UINT xx1,UINT xx2){
 // g_node and mark, floyd and backtrack 
 // set all members of the graph matrix to INFINITE except the diagnal
 // n    : number of max nodes
-void allocate_g(int n){
-	g_size   = n;
+void allocate_g(int size){
+	g_size   = size;
 	g        = (UINT**) malloc((g_size)*sizeof(UINT*));
 	g_node   = (NODE*)  malloc((g_size)*sizeof(NODE));
 	sink_node= g_node+block_num*4;   // points to first sink node
 	g_occupy = (BOOL*)  malloc((g_size)*sizeof(BOOL));
 	dirs     = (DIRECTION**) malloc((g_size)*sizeof(DIRECTION*));
+
 	// for dijkstra
 	shortest = (UINT *) malloc(g_size * sizeof(UINT));
 	via      = (int *) malloc(g_size * sizeof(int));
 	mark     = (BOOL*) malloc(g_size * sizeof(BOOL));
-	// for floyd,
-	shortest_pair = NULL;
-	backtrack_pair= NULL;
+
+	// for floyd
+	int x,y;
+	for(x=0;x<2;x++){// dimension 2 allocation
+		shortest_pair[x]  = malloc(sizeof(UINT**) * g_size);
+		backtrack_pair[x] = malloc(sizeof(int**) * g_size);
+		for(y=0;y<g_size;y++){// dimension 3 allocation
+			shortest_pair[x][y] = malloc(sizeof(UINT*) * g_size);
+			backtrack_pair[x][y] = malloc(sizeof(int*) * g_size);
+		}
+	}
 
 	int i;
 	for(i=0;i<g_size;i++){// 2-dimension allocation
@@ -540,11 +551,50 @@ void add2pt(NODE s,NODE t,BLOCKAGE * list){
 
 // initialize floyd
 void init_all_pair(){
+	// initialize shortest_pair[0][i][j] to original graph
+	int i,j;
+	for(i=0;i<g_size;i++)
+		for(j=0;j<g_size;j++){
+			shortest_pair[0][i][j] = g[i][j];
+			if( i == j || (g[i][j] == INFINITE) )
+				backtrack_pair[0][i][j] = -1;
+			else
+				backtrack_pair[0][i][j] = i;
+		}
 }
 
 // use floyd to compute all pair's shortest path
-void floyd(BLOCKAGE * list){
+// RETURN : the final shortest_pair matrix pointer
+UINT** floyd(){
+	// p for current updating one, q for previous one
+	int p=1,q=0; 
+	int i,j,k;
+	UINT *** d = shortest_pair;  // for simplication
+	int *** bt = backtrack_pair; // NOT SURE whether there is problem
+	for(k=0;k<g_size;k++){
+		if( g_occupy[k] == FALSE ) continue;
+		for(i=0;i<g_size;i++){
+			// skip if not occupied by any node
+			if( g_occupy[i] == FALSE ) continue;
+			for(j=0;j<g_size;j++){
+				if( g_occupy[j] == FALSE ) continue;
+				UINT usep = d[q][i][k]+d[q][k][j];
+				if( d[q][i][j] <= usep ){
+					d[p][i][j] = d[q][i][j]; 
+					bt[p][i][j] = bt[q][i][j];
+				}
+				else{
+					d[p][i][j] = usep;
+					bt[p][i][j] = bt[q][k][j];
+				}
 
+			}
+		}
+		// IMPORTANT: update switch
+		q=p;
+		p=(p+1)%2;
+	}
+	return d[q];
 }
 
 // initialize the shortest distance,via,mark vector from source point
@@ -611,14 +661,20 @@ void destroy_g(){
 	free(g);
 	free(dirs);
 
-	free(shortest_pair);
-	free(backtrack_pair);
+	int x,y;
+	for(x=0;x<2;x++){
+		for(y=0;y<g_size;y++){// free dimension 3 
+			free(shortest_pair[x][y]);
+			free(backtrack_pair[x][y]);
+		}
+		free(shortest_pair[x]);
+		free(backtrack_pair[x]);
+	}
 
 	free(g_node);
 	free(g_occupy);
 
 	g = NULL; dirs = NULL; via = NULL; shortest = NULL; mark = NULL;
-	shortest_pair = NULL; backtrack_pair = NULL;
 	g_node = NULL; g_occupy = NULL;
 }
 
