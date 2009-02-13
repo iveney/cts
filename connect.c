@@ -20,11 +20,12 @@ static int width=10;    // controls output width
 
 // variables for graph
 UINT ** g =NULL;        // a matrix of graph, order = g_size
-DIRECTION ** dirs=NULL; // the move directions between two point,same size as graph
-NODE * g_node=NULL;     // a list of nodes, [0..block_num*4-1]=block corners,rest=sinks
+DIRECTION ** dirs=NULL; // the move directions between two point
+NODE * g_node=NULL;     // [0..static_num-1]=block corners,(rest)=sinks
 BOOL * g_occupy=NULL;   // mark if g_node is a valid node
 NODE * sink_node=NULL;  // points to the first sink node in g_node
 int block_num=0;	// number of blockages
+int static_num=0;       // number of static nodes (shoulb be block_num*4)
 int sink_num=0;         // number of sinks
 int g_size=0;           // total size of g(total nodes available)
 int g_num=0;            // number of nodes in g currently
@@ -65,12 +66,12 @@ void sethseg(HSEG * h,UINT yy,UINT xx1,UINT xx2){
 // set all members of the graph matrix to INFINITE except the diagnal
 // n    : number of max nodes
 void allocate_g(int size){
-	g_size   = size;
-	g        = (UINT**) malloc((g_size)*sizeof(UINT*));
-	g_node   = (NODE*)  malloc((g_size)*sizeof(NODE));
-	sink_node= g_node+block_num*4;   // points to first sink node
-	g_occupy = (BOOL*)  malloc((g_size)*sizeof(BOOL));
-	dirs     = (DIRECTION**) malloc((g_size)*sizeof(DIRECTION*));
+	g_size		= size;
+	g		= (UINT**) malloc((g_size)*sizeof(UINT*));
+	g_node		= (NODE*)  malloc((g_size)*sizeof(NODE));
+	sink_node	= g_node+static_num;   // points to first sink node
+	g_occupy	= (BOOL*)  malloc((g_size)*sizeof(BOOL));
+	dirs		= (DIRECTION**) malloc((g_size)*sizeof(DIRECTION*));
 
 	// for dijkstra
 	shortest = (UINT *) malloc(g_size * sizeof(UINT));
@@ -100,8 +101,8 @@ void allocate_g(int size){
 BOOL gen_block_node(BLOCKAGE * blockage){
 	int i;
 	for(i=0;i<block_num;i++) gen_node(&blockage->pool[i],&g_node[i*4]);
-	// allocate [0..block_num*4] to the blockage corner nodes
-	for(i=0;i<g_num;i++) 
+	// allocate [0..static_num] to the blockage corner nodes
+	for(i=0;i<static_num;i++) 
 		g_occupy[i] = TRUE; 
 	return TRUE;
 }
@@ -120,18 +121,23 @@ void construct_g_all(BLOCKAGE * blocks, SINK * sink){
 	// first construct the static part of graph(blockage corners)
 	block_num = blocks->num;
 	sink_num = sink->num;
-	g_num = block_num*4;              // only have block_num*4 nodes now
-	allocate_g(block_num*4+sink_num); // allocate space for all
-	gen_segments(blocks);             // generate segments from blockages
+	static_num = block_num*4;
+	g_num = static_num;               // only have static_num nodes now
+	allocate_g(static_num+sink_num);  // allocate space for all
+	init_g();                         // initialize the elements
 	gen_block_node(blocks);           // generate a set of blockage corners
+	gen_segments(blocks);             // generate segments from blockages
 	constructg(blocks); 
 
 	// now copy the sinks into g_node
 	copy_sink(sink);
 	int i;
 	// add every sink point into the graph
-	for(i=0;i<sink_num;i++)
+	//for(i=0;i<g_size;i++) printf("g_occupy[%d]=%d\n",i,(int)g_occupy[i]);//
+	for(i=0;i<sink_num;i++){
+		//printf("inserting %d\n",i);
 		insertpt(sink_node[i]);
+	}
 }
 
 // initialize the graph to be not connected
@@ -144,6 +150,7 @@ void init_g(){
 			else g[i][j] = INFINITE;
 			dirs[i][j] = INVALID;
 		}
+		g_occupy[i]=FALSE;
 	}
 }
 
@@ -405,7 +412,6 @@ int gen_segments(BLOCKAGE * block){
 // REQUIRE: external storage g
 // list : pointer to BLOCKAGE
 int constructg(BLOCKAGE * block){
-	init_g();               // initialize the elements
 
 	// start to construct the graph 
 	int b_i,b_j;
@@ -447,7 +453,8 @@ int constructg(BLOCKAGE * block){
 int allocate_node(){
 	// search from the starting position of sink node
 	int i;
-	for(i=block_num*4;i<g_size;i++)
+	//printf("static_num=%d,g_size=%d\n",static_num,g_size);
+	for(i=static_num;i<g_size;i++)
 		if( g_occupy[i] == FALSE ){
 			g_occupy[i] = TRUE;
 			return i;
@@ -470,6 +477,7 @@ int insertpt(NODE pt){
 	g_node[pt_idx] = pt;
 	for(i=0;i<g_size;i++){
 		if( i!=pt_idx && g_occupy[i] == TRUE ){
+			//printf("reaching:%d -> %d\n",pt_idx,i);
 			reach(pt,g_node[i],pt_idx,i);
 		}
 	}
@@ -482,7 +490,7 @@ int insertpt(NODE pt){
 // pt_idx   : the index of the point in the graph(g_node)
 // return   : TRUE if successfully removed
 BOOL removept(int pt_idx){
-	if( (pt_idx<block_num*4) || (g_occupy[pt_idx] != TRUE) )
+	if( (pt_idx<static_num) || (g_occupy[pt_idx] != TRUE) )
 		report_exit("removept: invalid");
 	int i;
 	g_occupy[pt_idx] = FALSE;
@@ -553,19 +561,29 @@ void add2pt(NODE s,NODE t,BLOCKAGE * list){
 void init_all_pair(){
 	// initialize shortest_pair[0][i][j] to original graph
 	int i,j;
-	for(i=0;i<g_size;i++)
+//		printf("\n");
+	for(i=0;i<g_size;i++){
 		for(j=0;j<g_size;j++){
 			shortest_pair[0][i][j] = g[i][j];
-			if( i == j || (g[i][j] == INFINITE) )
+			/*
+			if(g[i][j] == INFINITE)
+				printf("%10s","-");
+			else
+				printf("%10d",shortest_pair[0][i][j]);
+				*/
+			if( (i == j) || (g[i][j] == INFINITE) )
 				backtrack_pair[0][i][j] = -1;
 			else
 				backtrack_pair[0][i][j] = i;
 		}
+		//printf("\n");
+	}
 }
 
 // use floyd to compute all pair's shortest path
-// RETURN : the final shortest_pair matrix pointer
-UINT** floyd(){
+// RETURN : an integer to indicate which array to use
+int floyd(){
+	init_all_pair();
 	// p for current updating one, q for previous one
 	int p=1,q=0; 
 	int i,j,k;
@@ -587,14 +605,13 @@ UINT** floyd(){
 					d[p][i][j] = usep;
 					bt[p][i][j] = bt[q][k][j];
 				}
-
 			}
 		}
 		// IMPORTANT: update switch
 		q=p;
 		p=(p+1)%2;
 	}
-	return d[q];
+	return q;
 }
 
 // initialize the shortest distance,via,mark vector from source point
@@ -606,7 +623,7 @@ void init_single_source(int src_idx){
 		mark[i] = FALSE;
 
 		shortest[i] = g[src_idx][i];
-		if( shortest[i] != INFINITE )
+		if( i!=src_idx && shortest[i] != INFINITE )
 			via[i] = src_idx;
 	}
 	mark[src_idx] = TRUE;

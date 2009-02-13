@@ -924,27 +924,30 @@ void draw_line_node(FILE *fp,NODE s,NODE t, int dash, int color){
 			dash,color);
 }
 
-// testing function: draw the shortest path tree( may not be rectlinear)
-void draw_single_source_tree(FILE * pFig,int src_idx){
+// draw the shortest path tree
+// REQUIRE : the dijkstra has been called!
+// pFig    : the FILE object to write to
+// src_idx : the source point
+void draw_single_source_tree(FILE * pFig,UINT * back,int src_idx){
 	int i;
 	for(i=0;i<g_size;i++){
 		if( g_occupy[i] == TRUE && i != src_idx )
-			draw_line_node(pFig,g_node[i],g_node[via[i]],SOLID,BLUE);
+			draw_line_node(pFig,g_node[i],g_node[back[i]],SOLID,BLUE);
 	}
 }
 
-// testing function: draw the rectilinear shortest path we found
+// draw the rectilinear shortest path we found
+// REQUIRE : the dijkstra has been called!
 // pFig    : the FILE object to write to
 // src_idx : the source point
-// s,t     : the last two node
-void draw_single_source_rectilinear(FILE * pFig,int src_idx){
+void draw_single_source_rectilinear(FILE * pFig,UINT * back,int src_idx){
 	int i;
 	for(i=0;i<g_size;i++){
 		if( g_occupy[i] == TRUE && i != src_idx ){
-			int j=via[i];
+			int j=back[i]; // generate the meeting point first
 			NODE temp;
-			if( dirs[i][j] == UP ||
-			    dirs[i][j] == DOWN ){
+			if( dirs[i][j] == UP ||	
+			    dirs[i][j] == DOWN ){// backtrace the nodes
 				temp.x = g_node[i].x;
 				temp.y = g_node[j].y;
 			}
@@ -958,4 +961,3 @@ void draw_single_source_rectilinear(FILE * pFig,int src_idx){
 		}
 	}
 }
-

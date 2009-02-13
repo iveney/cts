@@ -36,6 +36,33 @@ void draw_case(FILE * pFig){
 	draw_sinks(pFig);
 }
 
+void output_g_dirs(){
+	// check construct_g_all output
+	printf("\n---------------------------------------------------------\n");
+	outputg();
+	printf("\n---------------------------------------------------------\n");
+	output_dirs();
+}
+
+void output_dijkstra(){
+	// check dijkstra's output
+	int i;
+	printf("dijkstra output:\n");
+	for(i=0;i<g_size;i++) printf("%10d",shortest[i]);
+	printf("\n");
+	for(i=0;i<g_size;i++) printf("%10d",via[i]);
+	printf("\n");
+}
+
+void print_path(int which,int src_idx,int dst_idx){
+	int p=dst_idx;
+	while( p != src_idx ){
+		printf("%5d",p);
+		p=backtrack_pair[which][src_idx][p];
+	}
+	printf("\n");
+}
+
 int main(int argc, char * argv[]){
 	FILE *ifp,*ofp; 
 	if(argc > 3 || argc < 2)
@@ -45,58 +72,70 @@ int main(int argc, char * argv[]){
 	if( InputFile(ifp) != 1 )
 		report_exit("Error reading file");
 
-	/*
-	int **_out[2];
-	int ***out=_out;
-	int x,y,z;
-	int dim1=3,dim2=10,dim3=5;
-	for(x=0;x<dim1;x++){
-		out[x]=(int**)malloc(sizeof(int**)*dim2);
-		for(y=0;y<dim2;y++){
-			out[x][y]=(int*)malloc(sizeof(int*)*dim3);
-			for(z=0;z<dim3;z++){
-				out[x][y][z]=x*dim3*dim2+y*dim3+z;
-				printf("%10d",out[x][y][z]);
-			}
-			printf("\n");
-		}
-		printf("\n\n\n\n");
-	}
-	*/
-
 	// start to test
 	construct_g_all(&blockage,&sink);
-	/*
-	 // check construct_g_all output
-	printf("\n---------------------------------------------------------\n");
-	outputg();
-	printf("\n---------------------------------------------------------\n");
-	output_dirs();
-	*/
 
-	//int src_idx=block_num*4+1;
+	int src_idx=block_num*4;
+	//output_g_dirs();
 	//dijkstra(&blockage,src_idx);
-	/*
-	// check dijkstra's output
+	//output_dijkstra();
+
 	int i;
-	for(i=0;i<g_size;i++) printf("%10d",via[i]);
-	for(i=0;i<g_size;i++) printf("%10d",shortest[i]);
+	int which = floyd();
+
+	/*
+	printf("floyd\n");
+	for(i=0;i<g_size;i++) printf("%10d",shortest_pair[which][src_idx][i]);
+	printf("\n");
+	for(i=0;i<g_size;i++) printf("%10d",backtrack_pair[which][src_idx][i]);
 	printf("\n");
 	*/
+	print_path(which,src_idx,5);
 
-	//////////////////////////////////////////////////////////////////////////
 	// write results into file
-	UINT ** p = floyd();
-	FILE * pFig = fopen("fig","w");
-	FILE * pFig_rect = fopen("fig2","w");
-	draw_case(pFig);
-	draw_case(pFig_rect);
+	char buf[80];
+	FILE * pFig; 
+	FILE * pFig_rect;
+	for(i=static_num;i<g_size;i++){
+		printf("node index = %d\n",i);
+		sprintf(buf,"tree_%d.fig",i-static_num);
+		printf("Writing %s...\n",buf);
+		pFig = fopen(buf,"w");
 
-	//draw_single_source_tree(pFig,src_idx);
-	//draw_single_source_rectilinear(pFig_rect,src_idx);
+		sprintf(buf,"rect_%d.fig",i-static_num);
+		printf("Writing %s...\n",buf);
+		pFig_rect = fopen(buf,"w");
 
-	fclose(pFig);
-	fclose(pFig_rect);
+		draw_case(pFig);
+		draw_single_source_tree(pFig,backtrack_pair[which][i],i);
+
+		draw_case(pFig_rect);
+		draw_single_source_rectilinear(pFig_rect,backtrack_pair[which][i],i);
+
+		fclose(pFig);
+		fclose(pFig_rect);
+	}
+
+
 	free_all();
 	return 0;
 }
+
+/*
+   int **_out[2];
+   int ***out=_out;
+   int x,y,z;
+   int dim1=3,dim2=10,dim3=5;
+   for(x=0;x<dim1;x++){
+   out[x]=(int**)malloc(sizeof(int**)*dim2);
+   for(y=0;y<dim2;y++){
+   out[x][y]=(int*)malloc(sizeof(int*)*dim3);
+   for(z=0;z<dim3;z++){
+   out[x][y][z]=x*dim3*dim2+y*dim3+z;
+   printf("%10d",out[x][y][z]);
+   }
+   printf("\n");
+   }
+   printf("\n\n\n\n");
+   }
+   */
