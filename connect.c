@@ -1,7 +1,10 @@
 // ----------------------------------------------------------------//
-// connect.c
+// Filename : connect.c
+// Source code for all pair shortest path and single source shortest
+// path. Also some global varibales for use
+//
 // Author : Xiao Zigang
-// Modifed: <Wed Feb 11 10:48:54 HKT 2009> 
+// Modifed: <Fri Feb 13 16:46:54 HKT 2009> 
 // ----------------------------------------------------------------//
 
 #include <stdio.h>
