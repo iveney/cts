@@ -63,6 +63,12 @@ void sethseg(HSEG * h,UINT yy,UINT xx1,UINT xx2){
 	h->x1 = xx1; h->x2 = xx2;
 }
 
+int all_pair_shortest(){
+	int i = floyd();
+	pairs=shortest_pair[i];
+	parents=backtrack_pair[i];
+	return i;
+}
 // ----------------------------------------------------------------//
 // functions
 

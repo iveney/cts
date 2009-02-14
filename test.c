@@ -82,7 +82,11 @@ int main(int argc, char * argv[]){
 
 	int i;
 	//int which = floyd();
+<<<<<<< HEAD:test.c
 	all_pair_shortest();
+=======
+	int which=all_pair_shortest();
+>>>>>>> temp:test.c
 
 	/*
 	printf("floyd\n");
@@ -108,7 +112,11 @@ int main(int argc, char * argv[]){
 		pFig_rect = fopen(buf,"w");
 
 		draw_case(pFig);
+<<<<<<< HEAD:test.c
 		draw_single_source_tree(pFig,pairs[i],i);
+=======
+		draw_single_source_tree(pFig,parents[i],i);
+>>>>>>> temp:test.c
 
 		draw_case(pFig_rect);
 		draw_single_source_rectilinear(pFig_rect,parents[i],i);
