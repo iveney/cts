@@ -44,9 +44,11 @@ BOOL * mark=NULL;       // mark if a node is visited
 
 // variables for floyd, use swtich array technique
 // size should be 2 * g_size * g_size
+UINT ** pairs;
+int ** parents;
+// for internal use of floyd
 UINT **shortest_pair[2]={NULL,NULL};   // shortest pair matrix
 int ** backtrack_pair[2]={NULL,NULL};  // backmatrix
-//int turn=0;                // variable to control switch turn
 
 // ----------------------------------------------------------------//
 // functions operate on struct
@@ -558,6 +560,13 @@ void add2pt(NODE s,NODE t,BLOCKAGE * list){
 
 	// update their connectivity
 	reach(s,t,s_idx,t_idx);
+}
+
+//
+void all_pair_shortest(){
+	int i=floyd();
+	pairs=shortest_pair[i];
+	parents=backtrack_pair[i];
 }
 
 // initialize floyd
