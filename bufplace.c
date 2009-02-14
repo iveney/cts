@@ -928,7 +928,7 @@ void draw_line_node(FILE *fp,NODE s,NODE t, int dash, int color){
 // REQUIRE : the dijkstra has been called!
 // pFig    : the FILE object to write to
 // src_idx : the source point
-void draw_single_source_tree(FILE * pFig,UINT * back,int src_idx){
+void draw_single_source_tree(FILE * pFig,int * back,int src_idx){
 	int i;
 	for(i=0;i<g_size;i++){
 		if( g_occupy[i] == TRUE && i != src_idx )
@@ -940,7 +940,7 @@ void draw_single_source_tree(FILE * pFig,UINT * back,int src_idx){
 // REQUIRE : the dijkstra has been called!
 // pFig    : the FILE object to write to
 // src_idx : the source point
-void draw_single_source_rectilinear(FILE * pFig,UINT * back,int src_idx){
+void draw_single_source_rectilinear(FILE * pFig,int * back,int src_idx){
 	int i;
 	for(i=0;i<g_size;i++){
 		if( g_occupy[i] == TRUE && i != src_idx ){

@@ -44,6 +44,8 @@ BOOL * mark=NULL;       // mark if a node is visited
 
 // variables for floyd, use swtich array technique
 // size should be 2 * g_size * g_size
+UINT **pairs;
+int **parents;
 UINT **shortest_pair[2]={NULL,NULL};   // shortest pair matrix
 int ** backtrack_pair[2]={NULL,NULL};  // backmatrix
 //int turn=0;                // variable to control switch turn
@@ -61,6 +63,12 @@ void sethseg(HSEG * h,UINT yy,UINT xx1,UINT xx2){
 	h->x1 = xx1; h->x2 = xx2;
 }
 
+int all_pair_shortest(){
+	int i = floyd();
+	pairs=shortest_pair[i];
+	parents=backtrack_pair[i];
+	return i;
+}
 // ----------------------------------------------------------------//
 // functions
 
