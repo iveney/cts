@@ -63,14 +63,85 @@ void sethseg(HSEG * h,UINT yy,UINT xx1,UINT xx2){
 	h->x1 = xx1; h->x2 = xx2;
 }
 
-int all_pair_shortest(){
-	int i = floyd();
-	pairs=shortest_pair[i];
-	parents=backtrack_pair[i];
-	return i;
+// determin if two rectilinear segment intersects
+// hor : the horizontal segment
+// ver : the vertical segment
+// note: for hor, x1<x2
+//       for ver, y1<y2
+BOOL intersect(HSEG hor,VSEG ver){
+	//if( DOUBLE_GT(ver.x,hor.x1) && DOUBLE_LT(ver.x,hor.x2) &&
+	//    DOUBLE_GT(hor.y,ver.y1) && DOUBLE_LT(hor.y,ver.y2) )
+	if( ver.x > hor.x1 && ver.x < hor.x2 &&
+	    hor.y > ver.y1 && hor.y < ver.y2)
+		return TRUE;
+	return FALSE;
 }
+
 // ----------------------------------------------------------------//
 // functions
+
+// construct the whole graph with a list of blockages and sinks
+void construct_g_all(BLOCKAGE * blocks, SINK * sink){
+	// first construct the static part of graph(blockage corners)
+	block_num = blocks->num;
+	sink_num = sink->num;
+	static_num = block_num*4;
+	g_num = static_num;               // only have static_num nodes now
+	allocate_g(static_num+sink_num);  // allocate space for all
+	init_g();                         // initialize the elements
+	gen_block_node(blocks);           // generate a set of blockage corners
+	gen_segments(blocks);             // generate segments from blockages
+	constructg(blocks); 
+
+	// now copy the sinks into g_node
+	copy_sink(sink);
+	int i;
+	// add every sink point into the graph
+	//for(i=0;i<g_size;i++) printf("g_occupy[%d]=%d\n",i,(int)g_occupy[i]);//
+	for(i=0;i<sink_num;i++){
+		//printf("inserting %d\n",i);
+		insertpt(sink_node[i]);
+	}
+}
+
+// take a list of blockage, construct a graph for shortest path computation
+// REQUIRE: external storage g
+// list : pointer to BLOCKAGE
+int constructg(BLOCKAGE * block){
+
+	// start to construct the graph 
+	int b_i,b_j;
+	int cor_i,cor_j;
+	// for each corner of each blockage, 
+	// determine what corners it can each
+	// (in the sense of manhattan distance) : 4 for-loop
+	for(b_i=0;b_i<block->num;b_i++){
+		BOX * boxi = &block->pool[b_i];
+		for(b_j=b_i;b_j<block->num;b_j++){
+			BOX * boxj = &block->pool[b_j];
+			NODE nodei[4],nodej[4];
+			// generate the 4 nodes of each blockage
+			// 3--2
+			// |  |
+			// 0--1
+			gen_node(boxi,nodei);
+			gen_node(boxj,nodej);
+
+			for(cor_i=0;cor_i<4;cor_i++){
+				for(cor_j=0;cor_j<4;cor_j++){
+					// need not to calculate the same point
+					if(b_i == b_j && cor_i == cor_j )
+						continue;
+					int idx1 = b_i*4+cor_i;
+					int idx2 = b_j*4+cor_j;
+					reach( nodei[cor_i], nodej[cor_j],
+					       idx1,idx2);
+				}
+			}
+		}
+	}
+	return 0;
+}
 
 // allocate space for graph, directions, shortest path, via, 
 // g_node and mark, floyd and backtrack 
@@ -107,50 +178,6 @@ void allocate_g(int size){
 	}
 }
 
-// generate all nodes of blocakges and stores it
-// REQUIRE: a list of blockages
-BOOL gen_block_node(BLOCKAGE * blockage){
-	int i;
-	for(i=0;i<block_num;i++) gen_node(&blockage->pool[i],&g_node[i*4]);
-	// allocate [0..static_num] to the blockage corner nodes
-	for(i=0;i<static_num;i++) 
-		g_occupy[i] = TRUE; 
-	return TRUE;
-}
-
-// copy a list of sink nodes into g_node;
-void copy_sink(SINK * sink){
-	int i;
-	for(i=0;i<sink->num;i++){
-		sink_node[i].x = sink->pool[i].x;
-		sink_node[i].y = sink->pool[i].y;
-	}
-}
-
-// construct the whole graph with a list of blockages and sinks
-void construct_g_all(BLOCKAGE * blocks, SINK * sink){
-	// first construct the static part of graph(blockage corners)
-	block_num = blocks->num;
-	sink_num = sink->num;
-	static_num = block_num*4;
-	g_num = static_num;               // only have static_num nodes now
-	allocate_g(static_num+sink_num);  // allocate space for all
-	init_g();                         // initialize the elements
-	gen_block_node(blocks);           // generate a set of blockage corners
-	gen_segments(blocks);             // generate segments from blockages
-	constructg(blocks); 
-
-	// now copy the sinks into g_node
-	copy_sink(sink);
-	int i;
-	// add every sink point into the graph
-	//for(i=0;i<g_size;i++) printf("g_occupy[%d]=%d\n",i,(int)g_occupy[i]);//
-	for(i=0;i<sink_num;i++){
-		//printf("inserting %d\n",i);
-		insertpt(sink_node[i]);
-	}
-}
-
 // initialize the graph to be not connected
 // the directions between points are INVALID
 void init_g(){
@@ -165,47 +192,80 @@ void init_g(){
 	}
 }
 
-// output the matrix of graph
-void outputg(){
-	int i,j;
-	static char format[20];
-	static char inf_string[20];
-	sprintf(format,"%%%dd",width); // %10d like format
-	sprintf(inf_string,"%%%ds",width); 
-	for(i=0;i<g_size;i++){
-		for(j=0;j<g_size;j++)
-			if( g[i][j] == INFINITE )
-				printf(inf_string,"-");
-			else printf(format,g[i][j]);
-		printf("\n");
-	}
+// generate all nodes of blocakges and stores it
+// REQUIRE: a list of blockages
+BOOL gen_block_node(BLOCKAGE * blockage){
+	int i;
+	for(i=0;i<block_num;i++) gen_node(&blockage->pool[i],&g_node[i*4]);
+	// allocate [0..static_num] to the blockage corner nodes
+	for(i=0;i<static_num;i++) 
+		g_occupy[i] = TRUE; 
+	return TRUE;
 }
 
-// output the manhattan directions of the graph
-void output_dirs(){
-	int i,j;
-	static char format[20];
-	sprintf(format,"%%%ds",width); 
-	for(i=0;i<g_size;i++){
-		for(j=0;j<g_size;j++){
-			printf(format,dir_string[(int)dirs[i][j]]);
+// generate four nodes from a block
+// ll=0, lr=1, ur=2, ul=3
+// node: store the four nodes, must have 4 elements
+// b   : the block
+void gen_node(BOX * b,NODE * node){
+	node[LL] = b->ll;
+	node[UR] = b->ur;
+
+	node[LR].x = b->ur.x;
+	node[LR].y = b->ll.y;
+
+	node[UL].x = b->ll.x;
+	node[UL].y = b->ur.y;
+}
+
+// generate horizontal and vertical list
+// the list ensures that:
+// for ver: y1<y2
+// for hor: x1<x2
+// NOTE   : if some block has a width/height < L, 
+//          it is not considered a block in vertical/horizontal
+// REQUIRE: a list of blockage
+int gen_segments(BLOCKAGE * block){
+	// for each block, there will be 2 vertical and 2 horizontal seg
+	int size = block->num * 2;
+	hlist = malloc(size * sizeof(HSEG));
+	vlist = malloc(size * sizeof(VSEG));
+	h_size=v_size=0;
+	int i;
+	for(i=0;i<block->num;i++){
+		BOX * pb = &block->pool[i];
+		int p=h_size;
+		int q=p+1;
+		// add horizontal segment
+		if( ABS(pb->ll.y - pb->ur.y) > _L_ ){// height
+			hlist[p].y = pb->ll.y;
+			hlist[q].y = pb->ur.y;
+			hlist[p].x1 = hlist[q].x1 = pb->ll.x;
+			hlist[p].x2 = hlist[q].x2 = pb->ur.x;
+			h_size+=2;
 		}
-		printf("\n");
+		// add vertical segment
+		p=v_size;
+		q=p+1;
+		if( ABS(pb->ll.x - pb->ur.x) > _L_ ){// width
+			vlist[p].x = pb->ll.x;
+			vlist[q].x = pb->ur.x;
+			vlist[p].y1 = vlist[q].y1 = pb->ll.y;
+			vlist[p].y2 = vlist[q].y2 = pb->ur.y;
+			v_size+=2;
+		}
 	}
+	// may sort the block from left to right, low to up
+	return 0;
 }
 
-// determin if two rectilinear segment intersects
-// hor : the horizontal segment
-// ver : the vertical segment
-// note: for hor, x1<x2
-//       for ver, y1<y2
-BOOL intersect(HSEG hor,VSEG ver){
-	//if( DOUBLE_GT(ver.x,hor.x1) && DOUBLE_LT(ver.x,hor.x2) &&
-	//    DOUBLE_GT(hor.y,ver.y1) && DOUBLE_LT(hor.y,ver.y2) )
-	if( ver.x > hor.x1 && ver.x < hor.x2 &&
-	    hor.y > ver.y1 && hor.y < ver.y2)
-		return TRUE;
-	return FALSE;
+// copy a list of sink nodes into g_node;
+void copy_sink(SINK * sink){
+	int i;
+	for(i=0;i<sink->num;i++){
+		sink_node[i].x = sink->pool[i].x;
+		sink_node[i].y = sink->pool[i].y;
+	}
 }
 
 // determine if two points are reach in the sense of manhattan distance
@@ -363,101 +423,6 @@ BOOL reach(NODE a,NODE b,int idx_a,int idx_b){
 	return FALSE;// neither succeed
 }
 
-// generate four nodes from a block
-// ll=0, lr=1, ur=2, ul=3
-// node: store the four nodes, must have 4 elements
-// b   : the block
-void gen_node(BOX * b,NODE * node){
-	node[LL] = b->ll;
-	node[UR] = b->ur;
-
-	node[LR].x = b->ur.x;
-	node[LR].y = b->ll.y;
-
-	node[UL].x = b->ll.x;
-	node[UL].y = b->ur.y;
-}
-
-// generate horizontal and vertical list
-// the list ensures that:
-// for ver: y1<y2
-// for hor: x1<x2
-// NOTE   : if some block has a width/height < L, 
-//          it is not considered a block in vertical/horizontal
-// REQUIRE: a list of blockage
-int gen_segments(BLOCKAGE * block){
-	// for each block, there will be 2 vertical and 2 horizontal seg
-	int size = block->num * 2;
-	hlist = malloc(size * sizeof(HSEG));
-	vlist = malloc(size * sizeof(VSEG));
-	h_size=v_size=0;
-	int i;
-	for(i=0;i<block->num;i++){
-		BOX * pb = &block->pool[i];
-		int p=h_size;
-		int q=p+1;
-		// add horizontal segment
-		if( ABS(pb->ll.y - pb->ur.y) > _L_ ){// height
-			hlist[p].y = pb->ll.y;
-			hlist[q].y = pb->ur.y;
-			hlist[p].x1 = hlist[q].x1 = pb->ll.x;
-			hlist[p].x2 = hlist[q].x2 = pb->ur.x;
-			h_size+=2;
-		}
-		// add vertical segment
-		p=v_size;
-		q=p+1;
-		if( ABS(pb->ll.x - pb->ur.x) > _L_ ){// width
-			vlist[p].x = pb->ll.x;
-			vlist[q].x = pb->ur.x;
-			vlist[p].y1 = vlist[q].y1 = pb->ll.y;
-			vlist[p].y2 = vlist[q].y2 = pb->ur.y;
-			v_size+=2;
-		}
-	}
-	// may sort the block from left to right, low to up
-	return 0;
-}
-
-// take a list of blockage, construct a graph for shortest path computation
-// REQUIRE: external storage g
-// list : pointer to BLOCKAGE
-int constructg(BLOCKAGE * block){
-
-	// start to construct the graph 
-	int b_i,b_j;
-	int cor_i,cor_j;
-	// for each corner of each blockage, 
-	// determine what corners it can each
-	// (in the sense of manhattan distance) : 4 for-loop
-	for(b_i=0;b_i<block->num;b_i++){
-		BOX * boxi = &block->pool[b_i];
-		for(b_j=b_i;b_j<block->num;b_j++){
-			BOX * boxj = &block->pool[b_j];
-			NODE nodei[4],nodej[4];
-			// generate the 4 nodes of each blockage
-			// 3--2
-			// |  |
-			// 0--1
-			gen_node(boxi,nodei);
-			gen_node(boxj,nodej);
-
-			for(cor_i=0;cor_i<4;cor_i++){
-				for(cor_j=0;cor_j<4;cor_j++){
-					// need not to calculate the same point
-					if(b_i == b_j && cor_i == cor_j )
-						continue;
-					int idx1 = b_i*4+cor_i;
-					int idx2 = b_j*4+cor_j;
-					reach( nodei[cor_i], nodej[cor_j],
-					       idx1,idx2);
-				}
-			}
-		}
-	}
-	return 0;
-}
-
 // allocate for available position
 // return the index of in g_node
 // return -1 if can not found( the g_node is full )
@@ -514,7 +479,6 @@ BOOL removept(int pt_idx){
 	return TRUE;
 }
 
-
 // add a point to the constructed graph from blockage list `l'
 // note that this function only compute's the 4*n point of blockage
 // NOT regarding another point to be added
@@ -568,13 +532,6 @@ void add2pt(NODE s,NODE t,BLOCKAGE * list){
 	reach(s,t,s_idx,t_idx);
 }
 
-//
-void all_pair_shortest(){
-	int i=floyd();
-	pairs=shortest_pair[i];
-	parents=backtrack_pair[i];
-}
-
 // initialize floyd
 void init_all_pair(){
 	// initialize shortest_pair[0][i][j] to original graph
@@ -596,6 +553,15 @@ void init_all_pair(){
 		}
 		//printf("\n");
 	}
+}
+
+// wrapper for floyd
+// after called, can use the variable pairs and parents.
+int all_pair_shortest(){
+	int i = floyd();
+	pairs=shortest_pair[i];
+	parents=backtrack_pair[i];
+	return i;
 }
 
 // use floyd to compute all pair's shortest path
@@ -680,6 +646,35 @@ void dijkstra(BLOCKAGE * list,int src_idx){
 				via[j] = index;
 			}
 		}
+	}
+}
+
+// output the matrix of graph
+void outputg(){
+	int i,j;
+	static char format[20];
+	static char inf_string[20];
+	sprintf(format,"%%%dd",width); // %10d like format
+	sprintf(inf_string,"%%%ds",width); 
+	for(i=0;i<g_size;i++){
+		for(j=0;j<g_size;j++)
+			if( g[i][j] == INFINITE )
+				printf(inf_string,"-");
+			else printf(format,g[i][j]);
+		printf("\n");
+	}
+}
+
+// output the manhattan directions of the graph
+void output_dirs(){
+	int i,j;
+	static char format[20];
+	sprintf(format,"%%%ds",width); 
+	for(i=0;i<g_size;i++){
+		for(j=0;j<g_size;j++){
+			printf(format,dir_string[(int)dirs[i][j]]);
+		}
+		printf("\n");
 	}
 }
 

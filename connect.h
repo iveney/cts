@@ -15,7 +15,6 @@
 typedef struct ver_seg{UINT x,y1,y2; }VSEG;
 typedef struct hor_seg{UINT y,x1,x2; }HSEG;
 
-
 /* connect.c */
 UINT **g;
 int g_size;
@@ -62,7 +61,6 @@ BOOL removept(int pt_idx);
 void addpt(NODE pt, int index, BLOCKAGE *list);
 void delpt(int pt_idx, BLOCKAGE *list);
 void add2pt(NODE s, NODE t, BLOCKAGE *list);
-void all_pair_shortest(void);
 void init_all_pair(void);
 int all_pair_shortest();
 int floyd();
