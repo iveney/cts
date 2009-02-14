@@ -21,4 +21,5 @@ void draw_single_source_rectilinear(FILE * pFig,int * back,int src_idx);
 //void draw_single_source_tree(FILE * pFig,int src_idx);
 //void draw_single_source_rectilinear(FILE * pFig,int src_idx);
 
+void draw_rectangle(FILE *fp, double x1, double y1, double x2, double y2, int dash, int colour);
 #endif

@@ -28,6 +28,7 @@ void init_draw(FILE *pFig){
 	fprintf(pFig,"Center\n");
 	fprintf(pFig,"Inches\n");
 	fprintf(pFig,"1200 2\n");
+	fprintf(pFig,"0 32 #dddddd\n");
 }
 
 void draw_case(FILE * pFig){
@@ -95,6 +96,13 @@ int main(int argc, char * argv[]){
 	char buf[80];
 	FILE * pFig; 
 	FILE * pFig_rect;
+	/*
+	pFig = fopen("tmp.fig","w");
+	init_draw(pFig);
+	draw_rectangle(pFig,31,22,189,112,SOLID,BLUE);
+	fclose(pFig);
+	exit(1);
+	*/
 	for(i=static_num;i<g_size;i++){
 		printf("node index = %d\n",i);
 		sprintf(buf,"tree_%d.fig",i-static_num);
@@ -114,7 +122,6 @@ int main(int argc, char * argv[]){
 		fclose(pFig);
 		fclose(pFig_rect);
 	}
-
 
 	free_all();
 	return 0;
