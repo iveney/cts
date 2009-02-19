@@ -82,27 +82,34 @@ int main(int argc, char * argv[]){
 	//output_dijkstra();
 
 	int i;
-	all_pair_shortest();
+	int which = all_pair_shortest();
 
-	/*
 	printf("floyd\n");
-	for(i=0;i<g_size;i++) printf("%10d",shortest_pair[which][src_idx][i]);
+	for(i=0;i<g_size;i++) 
+		if(shortest_pair[which][src_idx][i]>=INFINITE)
+			printf("%10s","-");
+		else	
+			printf("%10d",shortest_pair[which][src_idx][i]);
 	printf("\n");
-	for(i=0;i<g_size;i++) printf("%10d",backtrack_pair[which][src_idx][i]);
-	printf("\n");
-	*/
+	/*
+	   for(i=0;i<g_size;i++) printf("%10d",backtrack_pair[which][src_idx][i]);
+	   printf("\n");
+	   */
 
 	// write results into file
 	char buf[80];
 	FILE * pFig; 
 	FILE * pFig_rect;
 	/*
-	pFig = fopen("tmp.fig","w");
-	init_draw(pFig);
-	draw_rectangle(pFig,31,22,189,112,SOLID,BLUE);
-	fclose(pFig);
-	exit(1);
-	*/
+	   pFig = fopen("tmp.fig","w");
+	   init_draw(pFig);
+	   draw_rectangle(pFig,31,22,189,112,SOLID,BLUE);
+	   fclose(pFig);
+	   exit(1);
+	   */
+	for(i=0;i<g_num;i++){
+		printf("[%d]=%d\n",i,use_corner[i]);
+	}
 	for(i=static_num;i<g_size;i++){
 		printf("node index = %d\n",i);
 		sprintf(buf,"tree_%d.fig",i-static_num);

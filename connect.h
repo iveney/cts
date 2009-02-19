@@ -23,6 +23,7 @@ int *via;
 BOOL *mark;
 DIRECTION **dirs;
 NODE *g_node;
+BOOL *use_corner;
 BOOL *g_occupy;
 NODE *sink_node;
 int block_num;
@@ -69,4 +70,5 @@ void dijkstra(BLOCKAGE *list, int src_idx);
 void destroy_g(void);
 void destroy_segments(void);
 void free_all(void);
+BOOL inRect(NODE * node,BOX * b);
 #endif

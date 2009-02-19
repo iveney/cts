@@ -25,6 +25,7 @@ static int width=10;    // controls output width
 UINT ** g =NULL;        // a matrix of graph, order = g_size
 DIRECTION ** dirs=NULL; // the move directions between two point
 NODE * g_node=NULL;     // [0..static_num-1]=block corners,(rest)=sinks
+BOOL * use_corner=NULL; // mark if a corner of a block is usable
 BOOL * g_occupy=NULL;   // mark if g_node is a valid node
 NODE * sink_node=NULL;  // points to the first sink node in g_node
 int block_num=0;	// number of blockages
@@ -104,11 +105,29 @@ void construct_g_all(BLOCKAGE * blocks, SINK * sink){
 	}
 }
 
+// determines if a node is in a blockage
+// including the case that the node is in the bounding box of rect
+// true if they intersects
+BOOL inRect(NODE * node,BOX * b){
+	int x = node->x,y=node->y;
+	NODE * ll = &b->ll;
+	NODE * ur = &b->ur;
+	if( (x<=ur->x && x>=ll->x) &&
+	    (y<=ur->y && y>-ur->y) ){
+		/*
+		printf("(%d,%d) sec (%d %d),(%d %d)\n",x,y,
+				ll->x,ll->y,
+				ur->x,ur->y);
+				*/
+		return TRUE;
+	}
+	return FALSE;
+}
+
 // take a list of blockage, construct a graph for shortest path computation
 // REQUIRE: external storage g
 // list : pointer to BLOCKAGE
 int constructg(BLOCKAGE * block){
-
 	// start to construct the graph 
 	int b_i,b_j;
 	int cor_i,cor_j;
@@ -128,7 +147,17 @@ int constructg(BLOCKAGE * block){
 			gen_node(boxj,nodej);
 
 			for(cor_i=0;cor_i<4;cor_i++){
+				// handle the intersection case
+				if( b_i!=b_j && inRect(&nodei[cor_i],boxj) ){
+					// mark it unusable
+					use_corner[b_i*4+cor_i] = FALSE;
+					continue;
+				}
 				for(cor_j=0;cor_j<4;cor_j++){
+					if( b_i != b_j && inRect(&nodej[cor_j],boxi) ){
+						use_corner[b_j*4+cor_j] = FALSE;
+						continue;
+					}
 					// need not to calculate the same point
 					if(b_i == b_j && cor_i == cor_j )
 						continue;
@@ -151,6 +180,7 @@ void allocate_g(int size){
 	g_size		= size;
 	g		= (UINT**) malloc((g_size)*sizeof(UINT*));
 	g_node		= (NODE*)  malloc((g_size)*sizeof(NODE));
+	use_corner      = (BOOL*) malloc((g_size)*sizeof(BOOL));
 	sink_node	= g_node+static_num;   // points to first sink node
 	g_occupy	= (BOOL*)  malloc((g_size)*sizeof(BOOL));
 	dirs		= (DIRECTION**) malloc((g_size)*sizeof(DIRECTION*));
@@ -189,6 +219,7 @@ void init_g(){
 			dirs[i][j] = INVALID;
 		}
 		g_occupy[i]=FALSE;
+		use_corner[i]=TRUE;
 	}
 }
 
@@ -452,7 +483,8 @@ int insertpt(NODE pt){
 	int i;
 	g_node[pt_idx] = pt;
 	for(i=0;i<g_size;i++){
-		if( i!=pt_idx && g_occupy[i] == TRUE ){
+		if( i!=pt_idx && g_occupy[i] == TRUE &&
+		    use_corner[i] == TRUE ){
 			//printf("reaching:%d -> %d\n",pt_idx,i);
 			reach(pt,g_node[i],pt_idx,i);
 		}
@@ -703,6 +735,7 @@ void destroy_g(){
 
 	free(g_node);
 	free(g_occupy);
+	free(use_corner);
 
 	g = NULL; dirs = NULL; via = NULL; shortest = NULL; mark = NULL;
 	g_node = NULL; g_occupy = NULL;

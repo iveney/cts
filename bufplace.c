@@ -962,7 +962,7 @@ void draw_line_node(FILE *fp,NODE s,NODE t, int dash, int color){
 void draw_single_source_tree(FILE * pFig,int * back,int src_idx){
 	int i;
 	for(i=0;i<g_size;i++){
-		if( g_occupy[i] == TRUE && i != src_idx )
+		if( g_occupy[i] == TRUE && i != src_idx && back[i] != -1 )
 			draw_line_node(pFig,g_node[i],g_node[back[i]],SOLID,BLUE);
 	}
 }
@@ -974,7 +974,7 @@ void draw_single_source_tree(FILE * pFig,int * back,int src_idx){
 void draw_single_source_rectilinear(FILE * pFig,int * back,int src_idx){
 	int i;
 	for(i=0;i<g_size;i++){
-		if( g_occupy[i] == TRUE && i != src_idx ){
+		if( g_occupy[i] == TRUE && i != src_idx && back[i] != -1){
 			int j=back[i]; // generate the meeting point first
 			NODE temp;
 			if( dirs[i][j] == UP ||	
