@@ -113,12 +113,10 @@ BOOL inRect(NODE * node,BOX * b){
 	NODE * ll = &b->ll;
 	NODE * ur = &b->ur;
 	if( (x<=ur->x && x>=ll->x) &&
-	    (y<=ur->y && y>-ur->y) ){
-		/*
+	    (y<=ur->y && y>=ll->y) ){
 		printf("(%d,%d) sec (%d %d),(%d %d)\n",x,y,
 				ll->x,ll->y,
 				ur->x,ur->y);
-				*/
 		return TRUE;
 	}
 	return FALSE;
@@ -138,13 +136,15 @@ int constructg(BLOCKAGE * block){
 		BOX * boxi = &block->pool[b_i];
 		for(b_j=b_i;b_j<block->num;b_j++){
 			BOX * boxj = &block->pool[b_j];
-			NODE nodei[4],nodej[4];
+			NODE *nodei,*nodej;
 			// generate the 4 nodes of each blockage
 			// 3--2
 			// |  |
 			// 0--1
-			gen_node(boxi,nodei);
-			gen_node(boxj,nodej);
+			nodei = g_node+b_i*4;
+			nodej = g_node+b_j*4;
+			//gen_node(boxi,nodei);
+			//gen_node(boxj,nodej);
 
 			for(cor_i=0;cor_i<4;cor_i++){
 				// handle the intersection case

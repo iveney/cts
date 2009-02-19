@@ -13,4 +13,4 @@ limit slew 100
 limit cap 5000
 num blockage 2
 5 5 20 30
-15 20 50 70
+20 20 50 70
