@@ -247,6 +247,18 @@ void gen_node(BOX * b,NODE * node){
 
 	node[UL].x = b->ll.x;
 	node[UL].y = b->ur.y;
+
+// NOTE : for each node, adjust one unit
+	/*
+	--node[LL].x;
+	--node[UR].y;
+	++node[LR].x;
+	--node[LR].y;
+	--node[UL].x;
+	++node[UL].y;
+	++node[UR].x;
+	++node[UR].y;
+	*/
 }
 
 // generate horizontal and vertical list

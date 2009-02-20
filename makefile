@@ -1,5 +1,5 @@
 CC=/usr/bin/gcc 
-CFLAGS=-g -Wall
+CFLAGS=-g -Wall -pg
 SRC=io.c dme.c bufplace.c connect.c util.c main.c
 OBJ=$(SRC:%.c=%.o)
 TSTOBJ=test.o io.o bufplace.o connect.o util.o
