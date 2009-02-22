@@ -1,0 +1,41 @@
+* spice from s1000s
+.include tuned_45nm_HP.pm
+.subckt inv in out vdd
+m1  out in  vdd vdd   pmos l=45n w=14.6u
+m2  out in  0   0     nmos l=45n w=10.0u 
+.ends inv
+c0 n0 0 50f
+c1 n1 0 0.0001f
+c2 n4 0 0.0001f
+c3 n2 0 50f
+c4 n3 0 0.0001f
+c5 nSEG_NODE_5 0 100f
+c6 nSEG_NODE_6 0 99.9999f
+r0 n2 n1 0.0001
+r1 n4 n3 0.0001
+r2 n0 nSEG_NODE_5 50
+r3 nSEG_NODE_5 nSEG_NODE_6 50
+r4 nSEG_NODE_6 n2 49.9999
+x0 gin n0 vdd inv
+x1 n1 n4 vdd inv
+*
+vdd vdd 0 1
+vdt gin 0 1 pwl(0n 1, 0.2n 1, 0.325n 0, 2n 0)
+*
+.ic v(gin)=1
+.ic v(n0)=0
+.ic v(n1)=0
+.ic v(n4)=1
+.ic v(n2)=0
+.ic v(n3)=1
+.ic v(nSEG_NODE_5)=0
+.ic v(nSEG_NODE_6)=0
+*
+.opti nopage temp=75
+.width out=240
+*
+.tran 0.01n 2n 0.0n 0.01n
+* .print tran v(gin) v(n1) v(n2) v(n3)
+.print tran all
+* plot v(gin) v(n1) v(n2) v(n3)
+.end

@@ -1,0 +1,5 @@
+set key top left
+set key box
+set terminal postscript color
+set output 'output.ps'
+plot "table" using 1:2 title "V=1.0", "table" using 1:3 title "V=1.2", "table" using 1:4 title "delta"

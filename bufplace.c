@@ -919,7 +919,7 @@ void draw_blockages(FILE * fp){
 	for(i=0;i<blockage.num;i++){
 		BOX p=blockage.pool[i];
 		draw_rectangle(fp,p.ll.x,p.ll.y,p.ur.x,p.ur.y,SOLID,BLACK);
-		//draw_block(fp,blockage.pool[i],SOLID,BLACK);
+		draw_block(fp,blockage.pool[i],SOLID,BLACK);
 	}
 }
 

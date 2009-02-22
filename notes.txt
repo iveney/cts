@@ -1,0 +1,52 @@
+ISPD 2009 Clock Synthesis contest
+
+This file explains the example package together with the evaluation script.
+
+//--------------------------------------------------------------------------//
+//--------------------------------------------------------------------------//
+Files in this package:
+
+tuned_45nm_HP.pm : model card for ngspice simulation
+clkinv0.subckt   : spice subckt file describing an inverter
+eval2009.pl      : evaluation script
+explain_s1_s1s   : Notes on the sample input file "s1" and sample output file "s1s"
+s1               : sample input file
+s1s              : sample output file
+s1.diff_names    : sample input file; the problem is exactly the same as s0, with different node/buf/wireType name
+s1s.diff_names   : sample output file; exactly same clock routing as s1s, with different node/buf/wireType name
+s1.pdf           : explanation of s1 and s1s with pictures
+------------------
+s1r1             : sample testcase type 1
+s2r1             : sample testcase type 2
+s3r1             : sample testcase type 3
+s4r3             : sample testcase type 4
+
+//--------------------------------------------------------------------------//
+//--------------------------------------------------------------------------//
+How to use eval2009.pl?
+
+** to show help message
+./eval2009.pl
+or
+./eval2009.pl -h
+
+** to run eval2009
+./eval2009.pl s1 s1s tuned_45nm_HP.pm
+
+RESULTS WILL BE LIKE THIS:
+s1 s1s CLR 23.074 (ps) C 3867.200 (fF)
+
+It shows that using the clock routing "s1s", the clock latency range is 30.811ps while the total capacitance of clock network is 3867.200fF
+
+The same results will be generated if we run (I intentionally change the names of nodes, wire codes, and buffer types)
+./eval2009.pl s1.diff_names s1s.diff_names tuned_45nm_HP.pm
+
+If you want to see the clock latency at all clock sinks, you can use "-v" switch
+./eval2009.pl -v1 s1 s1s tuned_45nm_HP.pm
+
+NOTES:
+You must have ngspice in your PATH.
+You must have perl in /usr/bin/
+
+//--------------------------------------------------------------------------//
+//--------------------------------------------------------------------------//

@@ -1,0 +1,15 @@
+=== vdd 1.0
+  === clk src rising
+    sink 2 (1) latency 310.344 slew 89.059
+    sink 3 (2) latency 316.395 slew 21.554
+  === clk src falling
+    sink 2 (1) latency 312.894 slew 93.296
+    sink 3 (2) latency 318.064 slew 22.434
+=== vdd 1.2
+  === clk src rising
+    sink 2 (1) latency 306.915 slew 89.793
+    sink 3 (2) latency 311.891 slew 27.236
+  === clk src falling
+    sink 2 (1) latency 308.594 slew 93.141
+    sink 3 (2) latency 313.024 slew 27.862
+s1000 s1000s CLR 11.149 (ps) C 530.000 (fF)

@@ -73,6 +73,10 @@ int main(int argc, char * argv[]){
 	if( InputFile(ifp) != 1 )
 		report_exit("Error reading file");
 
+	char buf[79];
+	FILE * pFig; 
+	FILE * pFig_rect;
+
 	// start to test
 	construct_g_all(&blockage,&sink);
 
@@ -97,9 +101,6 @@ int main(int argc, char * argv[]){
 	   */
 
 	// write results into file
-	char buf[80];
-	FILE * pFig; 
-	FILE * pFig_rect;
 	/*
 	   pFig = fopen("tmp.fig","w");
 	   init_draw(pFig);
@@ -107,10 +108,12 @@ int main(int argc, char * argv[]){
 	   fclose(pFig);
 	   exit(1);
 	   */
+	/*
 	for(i=0;i<g_num;i++){
 		printf("[%d]=%d\n",i,use_corner[i]);
 	}
-	for(i=static_num;i<g_size;i++){
+	*/
+	for(i=static_num;i<static_num+5;i++){
 		printf("node index = %d\n",i);
 		sprintf(buf,"tree_%d.fig",i-static_num);
 		printf("Writing %s...\n",buf);

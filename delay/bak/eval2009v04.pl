@@ -8,7 +8,6 @@
 ###############################################################################
 # 
 # Logs:
-# 2009/02/18   added a switch "-b" to ignore blockage violation
 # 2009/02/16   bug fix: ".print tran" cannot take more than 71 arguments
 # 2009/02/16   bug fix: remove segmented wire resistance
 # 2009/02/03   node coordinates don't have to be integer, use \S instead
@@ -37,7 +36,7 @@ use POSIX qw(ceil floor);
 # -h help
 # -v verbose level
 # 
-getopts('sSbHhv:');
+getopts('sSHhv:');
 
 $MAX_WIRE_LENGTH=500000; # cut long wire until each segment is shorter than 500um
 
@@ -45,7 +44,6 @@ if($#ARGV != 2 || $opt_h || $opt_H ) {
     print STDERR "Usage: $0 [Options] [input design] [clock result] [model card file]\n";
     print STDERR "Options: -v [level]       Verbosity level (0-2)\n";
     print STDERR "         -s               do not abort if slew violation exists\n";
-    print STDERR "         -b               do not abort if placement blockage violation exists\n";
     print STDERR "         -h               this (help) message\n";
     print STDERR "Notes: C      - Cap estimation (in fF)\n";
     print STDERR "       CLR    - Clock Latency Range\n";
@@ -267,11 +265,7 @@ for $i (0 .. ($numBuffer - 1)) {
   die "ERROR: buffer type ($bufId) not defined in $inFileO," unless $bufLibExistInInputFile{$bufId};
   die "ERROR buffer connects two nodes with same id," if ( $from eq $to );
   die "ERROR buffer connects two nodes at distinct coordinates," if ( $nodeXArr[$CountFromNodeId{$from}] != $nodeXArr[$CountFromNodeId{$to}] || $nodeYArr[$CountFromNodeId{$from}] != $nodeYArr[$CountFromNodeId{$to}] );
-  if ( $opt_b ){
-    print "ERROR: buffer ($from->$to) overlaps blockage.\n" if check_blockage_overlap($nodeXArr[$CountFromNodeId{$from}], $nodeYArr[$CountFromNodeId{$from}]);
-  } else {
-    die "ERROR: buffer ($from->$to) overlaps blockage," if check_blockage_overlap($nodeXArr[$CountFromNodeId{$from}], $nodeYArr[$CountFromNodeId{$from}]);
-  }
+  die "ERROR: buffer ($from->$to) overlaps blockage," if check_blockage_overlap($nodeXArr[$CountFromNodeId{$from}], $nodeYArr[$CountFromNodeId{$from}]);
   push @bufFromArr, $from;
   push @bufToArr, $to;
   push @bufBufIdArr, $bufId;
@@ -322,7 +316,7 @@ for $i (0 .. ($#nodeIdArr )) {
 for $i (0 .. ($#nodeIdArr )) {
     die "ERROR node $nodeIdArr[$i] is not connect to the clock network," if $isInv[$i] == -1;
     if ($nodeSsIdArr[$i] ne $ssIdArr[0] && $nodeSsIdArr[$i] ne "__internal__" ) { 
-        die "ERROR sinknode $nodeIdArr[$i] is inverted," if $isInv[$i] == 1;
+#        die "ERROR sinknode $nodeIdArr[$i] is inverted," if $isInv[$i] == 1;
     }
 }
 
@@ -627,7 +621,7 @@ for ($k=3; $k<$numDataSet; $k++) {
         $slew[$k] = $d10[$k] - $d90[$k];
     }
     if ( $opt_s ){
-        print "ERROR slew violation $slew[$k] at $label.\n" if $slew[$k] > $SLEWLIMIT;
+        print "ERROR slew violation $slew[$k] at $label\n" if $slew[$k] > $SLEWLIMIT;
     } else {
         die "ERROR slew violation $slew[$k] at $label," if $slew[$k] > $SLEWLIMIT;
     }
