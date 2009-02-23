@@ -55,6 +55,7 @@ void output_dijkstra(){
 	printf("\n");
 }
 
+
 void print_path(int which,int src_idx,int dst_idx){
 	int p=dst_idx;
 	while( p != src_idx ){
@@ -62,6 +63,66 @@ void print_path(int which,int src_idx,int dst_idx){
 		p=backtrack_pair[which][src_idx][p];
 	}
 	printf("\n");
+}
+
+
+#define output_block(b) {printf("(%d,%d)\t(%d,%d)\n",b.ll.x,b.ll.y,b.ur.x,b.ur.y);}
+int sort_box_hor(const void * p1,const void *p2){
+	BOX * l = (BOX *) p1;
+	BOX * r = (BOX *) p2;
+	return (l->ll.x - r->ll.x);
+}
+int sort_box_ver(const void * p1,const void *p2){
+	BOX * l = (BOX *) p1;
+	BOX * r = (BOX *) p2;
+	return (l->ll.y - r->ll.y);
+}
+
+// preprocess the block to merge the blocks to larger rectangle shape
+void preprocess_block(BLOCKAGE * pBlock){
+	int n = pBlock->num,i,j;
+	int size=0;
+	BOX * pBox = malloc(sizeof(BOX)*n);
+	BOX * pPool = pBlock->pool;
+	BOOL * m = malloc(sizeof(BOOL)*n);
+	memcpy(pBox,pBlock->pool,sizeof(BOX)*n);
+	memset(m,FALSE,sizeof(BOOL)*n);
+	qsort(pPool,n,sizeof(BOX),sort_box_hor); // sort horizontally
+	// merge horizontal: from pPool to pBox
+	for(i=0;i<n;i++){
+		if( m[i] == TRUE ) continue;
+		BOX current = pPool[i];
+		for(j=i+1;j<n && current.ur.x >= pPool[j].ll.x ;j++){
+			if(current.ur.y == pPool[j].ur.y &&
+			   current.ll.y == pPool[j].ll.y){
+				current.ur = pPool[j].ur;
+				m[j] = TRUE;
+			}
+		}
+		pBox[size++] = current;
+	}
+	// merge vertical: from pBox to pPool
+	int new_size=0;
+	memset(m,FALSE,sizeof(BOOL)*n);
+	qsort(pBox,size,sizeof(BOX),sort_box_ver); // sort vertically
+	for(i=0;i<size;i++){
+		if( m[i] == TRUE ) continue;
+		BOX current = pBox[i];
+		for(j=i+1;j<size && current.ur.y >= pBox[j].ll.y;j++){
+			if( current.ur.x == pBox[j].ur.x &&
+			    current.ll.x == pBox[j].ll.x){
+				current.ur = pBox[j].ur;
+				m[j] = TRUE;
+			}
+		}
+		pPool[new_size++] = current;
+	}
+	pBlock->num = new_size; // update size
+#ifdef DEBUG
+	for(i=0;i<new_size;i++){ output_block(pBlock->pool[i]); }
+#endif
+	free(pBox);
+	free(m);
 }
 
 int main(int argc, char * argv[]){
@@ -73,17 +134,24 @@ int main(int argc, char * argv[]){
 	if( InputFile(ifp) != 1 )
 		report_exit("Error reading file");
 
-	char buf[79];
+	char buf[80];
 	FILE * pFig; 
 	FILE * pFig_rect;
+	preprocess_block(&blockage);
 
 	// start to test
 	construct_g_all(&blockage,&sink);
 
 	int src_idx=block_num*4;
 	//output_g_dirs();
-	//dijkstra(&blockage,src_idx);
-	//output_dijkstra();
+	/*
+	dijkstra(&blockage,src_idx);
+	output_dijkstra();
+	pFig= fopen("test.fig","w");
+	draw_case(pFig);
+	draw_single_source_tree(pFig,via,src_idx);
+	return 0;
+	*/
 
 	int i;
 	int which = all_pair_shortest();
@@ -113,7 +181,7 @@ int main(int argc, char * argv[]){
 		printf("[%d]=%d\n",i,use_corner[i]);
 	}
 	*/
-	for(i=static_num;i<static_num+5;i++){
+	for(i=static_num;i<g_size;i++){
 		printf("node index = %d\n",i);
 		sprintf(buf,"tree_%d.fig",i-static_num);
 		printf("Writing %s...\n",buf);
@@ -136,22 +204,3 @@ int main(int argc, char * argv[]){
 	free_all();
 	return 0;
 }
-
-/*
-   int **_out[2];
-   int ***out=_out;
-   int x,y,z;
-   int dim1=3,dim2=10,dim3=5;
-   for(x=0;x<dim1;x++){
-   out[x]=(int**)malloc(sizeof(int**)*dim2);
-   for(y=0;y<dim2;y++){
-   out[x][y]=(int*)malloc(sizeof(int*)*dim3);
-   for(z=0;z<dim3;z++){
-   out[x][y][z]=x*dim3*dim2+y*dim3+z;
-   printf("%10d",out[x][y][z]);
-   }
-   printf("\n");
-   }
-   printf("\n\n\n\n");
-   }
-   */

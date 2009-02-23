@@ -12,8 +12,16 @@
 //#define DOUBLE_LT(a,b) ( ((a)<((b)-EPSILON))?TRUE:FALSE )
 //#define DOUBLE_LE(a,b) ( ((a)<((b)+EPSILON))?TRUE:FALSE )
 
-typedef struct ver_seg{UINT x,y1,y2; }VSEG;
-typedef struct hor_seg{UINT y,x1,x2; }HSEG;
+typedef struct ver_seg{
+	UINT x,y1,y2; 
+	int which;   // which blockage
+	DIRECTION d; // L or R
+}VSEG;
+typedef struct hor_seg{
+	UINT y,x1,x2; 
+	int which;  // which blockage
+	DIRECTION d; // U or D
+}HSEG;
 
 /* connect.c */
 UINT **g;

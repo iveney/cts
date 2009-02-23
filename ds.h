@@ -8,7 +8,7 @@
 #define Manhattan(x1,y1,x2,y2) ((( (x1)-(x2) ) >= 0? ((x1)-(x2)) : ((x2)-(x1)))  +  (((y1)-(y2) ) >= 0? ((y1)-(y2)) : ((y2)-(y1))))
 
 #define INFINITE 2<<29 // big number to denote infinite
-#define _L_ 10.0
+#define _L_ INFINITE
 #define SMALL_BUF_SIZE 100
 #define LARGE_BUF_SIZE 1000
 #define ELMORE 1

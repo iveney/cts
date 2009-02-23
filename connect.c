@@ -33,10 +33,18 @@ int static_num=0;       // number of static nodes (shoulb be block_num*4)
 int sink_num=0;         // number of sinks
 int g_size=0;           // total size of g(total nodes available)
 int g_num=0;            // number of nodes in g currently
+
+// stores the edges of blockages
 VSEG * vlist=NULL;	// vertical list
 HSEG * hlist=NULL;      // horizontal list
 int v_size=0;           // size of vlist
 int h_size=0;           // size of hlist
+
+// stores some forbidden edges
+VSEG * vfbd = NULL;  //
+HSEG * hfbd = NULL;  //
+int vfbd_size=0;
+int hfbd_size=0;
 
 // variables for dijkstra
 UINT * shortest=NULL;   // shortest path shortest vector, size = g_size
@@ -69,7 +77,7 @@ void sethseg(HSEG * h,UINT yy,UINT xx1,UINT xx2){
 // ver : the vertical segment
 // note: for hor, x1<x2
 //       for ver, y1<y2
-BOOL intersect(HSEG hor,VSEG ver){
+inline BOOL intersect(HSEG hor,VSEG ver){
 	//if( DOUBLE_GT(ver.x,hor.x1) && DOUBLE_LT(ver.x,hor.x2) &&
 	//    DOUBLE_GT(hor.y,ver.y1) && DOUBLE_LT(hor.y,ver.y2) )
 	if( ver.x > hor.x1 && ver.x < hor.x2 &&
@@ -77,6 +85,28 @@ BOOL intersect(HSEG hor,VSEG ver){
 		return TRUE;
 	return FALSE;
 }
+
+/*
+inline int ver_adjacent(VSEG v1,VSEG v2){
+	int result;
+	if( v1.x != v2.x ) return 0;
+	else if (v1.y2<=v2.y1 || v1.y1>=v2.y2) return 0;
+	else{// 4 cases
+		if( v1.y1 > v2.y1 ){
+		}
+		else{
+		}
+	}
+}
+
+inline BOOL hor_adjacent(HSEG h1,HSEG h2){
+	if( h1.y != h2.y ) return FALSE;
+	if( (h1.x2 < h2.x2 && h1.x2 > h2.x1) ||
+	    (h2.x2 < h1.x2 && h2.x2 > h1.x1) )
+		return TRUE;
+	return FALSE;
+}
+*/
 
 // ----------------------------------------------------------------//
 // functions
@@ -112,11 +142,13 @@ BOOL inRect(NODE * node,BOX * b){
 	int x = node->x,y=node->y;
 	NODE * ll = &b->ll;
 	NODE * ur = &b->ur;
-	if( (x<=ur->x && x>=ll->x) &&
-	    (y<=ur->y && y>=ll->y) ){
+	if( (x<ur->x && x>ll->x) &&
+	    (y<ur->y && y>ll->y) ){
+#ifdef DEBUG
 		printf("(%d,%d) sec (%d %d),(%d %d)\n",x,y,
 				ll->x,ll->y,
 				ur->x,ur->y);
+#endif
 		return TRUE;
 	}
 	return FALSE;
@@ -132,39 +164,132 @@ int constructg(BLOCKAGE * block){
 	// for each corner of each blockage, 
 	// determine what corners it can each
 	// (in the sense of manhattan distance) : 4 for-loop
+	NODE *nodei,*nodej;
+	BOX * boxi,*boxj;
 	for(b_i=0;b_i<block->num;b_i++){
-		BOX * boxi = &block->pool[b_i];
-		for(b_j=b_i;b_j<block->num;b_j++){
-			BOX * boxj = &block->pool[b_j];
-			NODE *nodei,*nodej;
+		// for block b_i, connect its four points(self connect)
+		boxi = &block->pool[b_i];
+		nodei = g_node + b_i*4;
+		reach(nodei[0],nodei[1],b_i*4+0,b_i*4+1);
+		reach(nodei[1],nodei[2],b_i*4+1,b_i*4+2);
+		reach(nodei[2],nodei[3],b_i*4+2,b_i*4+3);
+		reach(nodei[3],nodei[0],b_i*4+3,b_i*4+0);
+
+		for(b_j=b_i+1;b_j<block->num;b_j++){
+			boxj = &block->pool[b_j];
+			nodej = g_node+b_j*4;
 			// generate the 4 nodes of each blockage
 			// 3--2
 			// |  |
 			// 0--1
-			nodei = g_node+b_i*4;
-			nodej = g_node+b_j*4;
-			//gen_node(boxi,nodei);
-			//gen_node(boxj,nodej);
 
 			for(cor_i=0;cor_i<4;cor_i++){
 				// handle the intersection case
-				if( b_i!=b_j && inRect(&nodei[cor_i],boxj) ){
+				if( inRect(&nodei[cor_i],boxj) ){
 					// mark it unusable
 					use_corner[b_i*4+cor_i] = FALSE;
 					continue;
 				}
 				for(cor_j=0;cor_j<4;cor_j++){
-					if( b_i != b_j && inRect(&nodej[cor_j],boxi) ){
+					if( inRect(&nodej[cor_j],boxi) ){
 						use_corner[b_j*4+cor_j] = FALSE;
 						continue;
 					}
 					// need not to calculate the same point
-					if(b_i == b_j && cor_i == cor_j )
-						continue;
+					//if(b_i == b_j && cor_i == cor_j ) continue;
 					int idx1 = b_i*4+cor_i;
 					int idx2 = b_j*4+cor_j;
 					reach( nodei[cor_i], nodej[cor_j],
 					       idx1,idx2);
+				}
+
+				// check if vertical adjacent
+				BOX *p1=boxi,*p2=boxj;
+				int l=b_i*4;
+				int r=b_j*4;
+				if(boxi->ll.x > boxj->ll.x ) {
+					// ensures p1 has smaller x
+					p1=boxj;
+					p2=boxi;
+					l=b_j*4;
+					r=b_i*4;
+				}
+				VSEG v1,v2;
+				setvseg(&v1,p1->ur.x,p1->ll.y,p1->ur.y);
+				setvseg(&v2,p2->ll.x,p2->ll.y,p2->ur.y);
+				// check if horizontal adjacent
+				if( v1.x  != v2.x  ||
+				    v1.y2 <= v2.y1 ||
+				    v2.y2 <= v1.y1){
+					; // do nothing
+			      	}
+				else{// they share a vertical edge
+					VSEG v;
+					v.x = v1.x;
+					g[l+1][l+2] = g[l+2][l+1] = INFINITE;
+					g[r+0][r+3] = g[r+3][r+0] = INFINITE;
+					g[l+1][r+3] = g[r+3][l+1] = INFINITE;
+					g[l+2][r+0] = g[r+0][l+2] = INFINITE;
+					if( v1.y1 > v2.y1 ){
+						g[r+0][l+3] = g[l+3][r+0] = INFINITE;
+						v.y1 = v2.y1;
+					}
+					else if( v1.y1 < v2.y1 ){
+						g[l+1][r+2] = g[r+2][l+1] = INFINITE;
+						v.y1 = v1.y1;
+					}
+					if( v1.y2 > v2.y2 ){
+						g[r+3][l+0] = g[l+0][r+3] = INFINITE;
+						v.y2 = v2.y2;
+					}
+					else if( v1.y2 < v2.y2 ){
+						g[l+2][r+1] = g[r+1][l+2] = INFINITE;
+						v.y2 = v1.y2;
+					}
+					vfbd[vfbd_size++] = v;
+				}
+
+				p1=boxi,p2=boxj;
+				int d=b_i*4;
+				int u=b_j*4;
+				if(boxi->ll.y > boxj->ll.y){
+					p1=boxj;
+					p2=boxi;
+					d=b_j*4;
+					u=b_i*4;
+				}
+				HSEG h1,h2;
+				sethseg(&h1,p1->ur.y,p1->ll.x,p1->ur.x);
+				sethseg(&h2,p2->ur.y,p2->ll.x,p2->ur.x);
+				if( h1.y  != h2.y  || 
+				    h1.x2 <= h2.x1 ||
+				    h2.x2 <= h1.x1){
+					;
+				}
+				else{// they share a horizontal edge
+					HSEG h;
+					h.y = h1.y;
+					g[d+2][d+3] = g[d+3][d+2] = INFINITE;
+					g[u+0][u+1] = g[u+1][u+0] = INFINITE;
+					g[d+2][u+0] = g[u+0][d+2] = INFINITE;
+					g[d+3][u+1] = g[u+1][d+3] = INFINITE;
+					if( h1.x1 < h2.x1 ){
+						g[u+3][d+1] = g[d+1][u+3] = INFINITE;
+						h.x1 = h1.x1;
+					}
+					else if( h1.x1 > h2.x1 ){
+						g[d+0][u+2] = g[u+2][d+0] = INFINITE;
+						h.x1 = h2.x1;
+					}
+					if( h1.x2 > h2.x2 ){
+						g[u+2][d+0] = g[d+0][u+2] = INFINITE;
+						h.x2 = h2.x2;
+					}
+					else if( h1.x2 < h2.x2 ){
+						g[d+1][u+3] = g[u+3][d+1] = INFINITE;
+						h.x2 = h1.x2;
+					}
+					hfbd[hfbd_size++] = h;
 				}
 			}
 		}
@@ -261,6 +386,19 @@ void gen_node(BOX * b,NODE * node){
 	*/
 }
 
+// sort the vertical list (ascending x)
+int sort_vseg(const void *v1,const void *v2){
+	VSEG *p1=(VSEG*)v1;
+	VSEG *p2=(VSEG*)v2;
+	return (p1->x - p2->x);
+}
+
+int sort_hseg(const void *h1,const void *h2){
+	HSEG *p1=(HSEG*)h1;
+	HSEG *p2=(HSEG*)h2;
+	return (p1->y - p2->y);
+}
+
 // generate horizontal and vertical list
 // the list ensures that:
 // for ver: y1<y2
@@ -273,32 +411,37 @@ int gen_segments(BLOCKAGE * block){
 	int size = block->num * 2;
 	hlist = malloc(size * sizeof(HSEG));
 	vlist = malloc(size * sizeof(VSEG));
+	hfbd = malloc(size * sizeof(HSEG));
+	vfbd = malloc(size * sizeof(HSEG));
 	h_size=v_size=0;
+	hfbd_size = vfbd_size = 0;
 	int i;
 	for(i=0;i<block->num;i++){
 		BOX * pb = &block->pool[i];
 		int p=h_size;
 		int q=p+1;
 		// add horizontal segment
-		if( ABS(pb->ll.y - pb->ur.y) > _L_ ){// height
+		//if( ABS(pb->ll.y - pb->ur.y) > _L_ ){// height
 			hlist[p].y = pb->ll.y;
 			hlist[q].y = pb->ur.y;
 			hlist[p].x1 = hlist[q].x1 = pb->ll.x;
 			hlist[p].x2 = hlist[q].x2 = pb->ur.x;
 			h_size+=2;
-		}
+		//}
 		// add vertical segment
 		p=v_size;
 		q=p+1;
-		if( ABS(pb->ll.x - pb->ur.x) > _L_ ){// width
+		//if( ABS(pb->ll.x - pb->ur.x) > _L_ ){// width
 			vlist[p].x = pb->ll.x;
 			vlist[q].x = pb->ur.x;
 			vlist[p].y1 = vlist[q].y1 = pb->ll.y;
 			vlist[p].y2 = vlist[q].y2 = pb->ur.y;
 			v_size+=2;
-		}
+		//}
 	}
 	// may sort the block from left to right, low to up
+	qsort(vlist,v_size,sizeof(VSEG),sort_vseg);
+	qsort(hlist,h_size,sizeof(HSEG),sort_hseg);
 	return 0;
 }
 
@@ -384,13 +527,19 @@ BOOL reach(NODE a,NODE b,int idx_a,int idx_b){
 	// if yes, get MHT and set direction
 	int i,j;
 
-	// try path 1:
+	// try path 1: hor first then ver
 	BOOL result = TRUE;
 	for(i=0;i<v_size;i++){// for vertical list
 		if( intersect(hor[0],vlist[i]) ){
 			result = FALSE;
 			break;
 		}
+		/*
+		if( vlist[i].y1 == hor[0].y ){
+		}
+		else if( vlist[i].y2 == hor[0].y ){
+		}
+		*/
 	}
 	if( result != FALSE ){
 		for(j=0;j<h_size;j++){// for horizontal list
@@ -424,7 +573,7 @@ BOOL reach(NODE a,NODE b,int idx_a,int idx_b){
 		return TRUE;
 	}
 
-	// try path 2:
+	// try path 2: ver first then hor
 	result = TRUE;
 	for(i=0;i<v_size;i++){// for vertical list
 		if( intersect(hor[1],vlist[i]) ){
@@ -580,7 +729,6 @@ void add2pt(NODE s,NODE t,BLOCKAGE * list){
 void init_all_pair(){
 	// initialize shortest_pair[0][i][j] to original graph
 	int i,j;
-//		printf("\n");
 	for(i=0;i<g_size;i++){
 		for(j=0;j<g_size;j++){
 			shortest_pair[0][i][j] = g[i][j];
@@ -753,10 +901,19 @@ void destroy_g(){
 	g_node = NULL; g_occupy = NULL;
 }
 
+// cancel the adjacent point
+void cancel_pt(){
+	//printf("%d\n%d\n",h_size,v_size);
+}
+
 // free the space allocated for segments, MUST be called at the end
 void destroy_segments(){
 	free(vlist);
 	free(hlist);
+	free(vfbd);
+	free(hfbd);
+	vfbd = NULL;
+	hfbd = NULL;
 	vlist = NULL; hlist = NULL;
 }
 
