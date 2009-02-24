@@ -86,27 +86,17 @@ inline BOOL intersect(HSEG hor,VSEG ver){
 	return FALSE;
 }
 
-/*
-inline int ver_adjacent(VSEG v1,VSEG v2){
-	int result;
+inline int ver_overlap(VSEG v1,VSEG v2){
 	if( v1.x != v2.x ) return 0;
 	else if (v1.y2<=v2.y1 || v1.y1>=v2.y2) return 0;
-	else{// 4 cases
-		if( v1.y1 > v2.y1 ){
-		}
-		else{
-		}
-	}
+	else return 1;
 }
 
-inline BOOL hor_adjacent(HSEG h1,HSEG h2){
-	if( h1.y != h2.y ) return FALSE;
-	if( (h1.x2 < h2.x2 && h1.x2 > h2.x1) ||
-	    (h2.x2 < h1.x2 && h2.x2 > h1.x1) )
-		return TRUE;
-	return FALSE;
+inline int hor_overlap(HSEG h1,HSEG h2){
+	if( h1.y != h2.y ) return 0;
+	else if (h1.x2<=h2.x1 || h1.x1>=h2.x2) return 0;
+	else return 1;
 }
-*/
 
 // ----------------------------------------------------------------//
 // functions
@@ -201,99 +191,99 @@ int constructg(BLOCKAGE * block){
 					int idx2 = b_j*4+cor_j;
 					reach( nodei[cor_i], nodej[cor_j],
 					       idx1,idx2);
-				}
+				}// end of for cor_j
+			}// end of for cor_i
 
-				// check if vertical adjacent
-				BOX *p1=boxi,*p2=boxj;
-				int l=b_i*4;
-				int r=b_j*4;
-				if(boxi->ll.x > boxj->ll.x ) {
-					// ensures p1 has smaller x
-					p1=boxj;
-					p2=boxi;
-					l=b_j*4;
-					r=b_i*4;
-				}
-				VSEG v1,v2;
-				setvseg(&v1,p1->ur.x,p1->ll.y,p1->ur.y);
-				setvseg(&v2,p2->ll.x,p2->ll.y,p2->ur.y);
-				// check if horizontal adjacent
-				if( v1.x  != v2.x  ||
-				    v1.y2 <= v2.y1 ||
-				    v2.y2 <= v1.y1){
-					; // do nothing
-			      	}
-				else{// they share a vertical edge
-					VSEG v;
-					v.x = v1.x;
-					g[l+1][l+2] = g[l+2][l+1] = INFINITE;
-					g[r+0][r+3] = g[r+3][r+0] = INFINITE;
-					g[l+1][r+3] = g[r+3][l+1] = INFINITE;
-					g[l+2][r+0] = g[r+0][l+2] = INFINITE;
-					if( v1.y1 > v2.y1 ){
-						g[r+0][l+3] = g[l+3][r+0] = INFINITE;
-						v.y1 = v2.y1;
-					}
-					else if( v1.y1 < v2.y1 ){
-						g[l+1][r+2] = g[r+2][l+1] = INFINITE;
-						v.y1 = v1.y1;
-					}
-					if( v1.y2 > v2.y2 ){
-						g[r+3][l+0] = g[l+0][r+3] = INFINITE;
-						v.y2 = v2.y2;
-					}
-					else if( v1.y2 < v2.y2 ){
-						g[l+2][r+1] = g[r+1][l+2] = INFINITE;
-						v.y2 = v1.y2;
-					}
-					vfbd[vfbd_size++] = v;
-				}
-
-				p1=boxi,p2=boxj;
-				int d=b_i*4;
-				int u=b_j*4;
-				if(boxi->ll.y > boxj->ll.y){
-					p1=boxj;
-					p2=boxi;
-					d=b_j*4;
-					u=b_i*4;
-				}
-				HSEG h1,h2;
-				sethseg(&h1,p1->ur.y,p1->ll.x,p1->ur.x);
-				sethseg(&h2,p2->ur.y,p2->ll.x,p2->ur.x);
-				if( h1.y  != h2.y  || 
-				    h1.x2 <= h2.x1 ||
-				    h2.x2 <= h1.x1){
-					;
-				}
-				else{// they share a horizontal edge
-					HSEG h;
-					h.y = h1.y;
-					g[d+2][d+3] = g[d+3][d+2] = INFINITE;
-					g[u+0][u+1] = g[u+1][u+0] = INFINITE;
-					g[d+2][u+0] = g[u+0][d+2] = INFINITE;
-					g[d+3][u+1] = g[u+1][d+3] = INFINITE;
-					if( h1.x1 < h2.x1 ){
-						g[u+3][d+1] = g[d+1][u+3] = INFINITE;
-						h.x1 = h1.x1;
-					}
-					else if( h1.x1 > h2.x1 ){
-						g[d+0][u+2] = g[u+2][d+0] = INFINITE;
-						h.x1 = h2.x1;
-					}
-					if( h1.x2 > h2.x2 ){
-						g[u+2][d+0] = g[d+0][u+2] = INFINITE;
-						h.x2 = h2.x2;
-					}
-					else if( h1.x2 < h2.x2 ){
-						g[d+1][u+3] = g[u+3][d+1] = INFINITE;
-						h.x2 = h1.x2;
-					}
-					hfbd[hfbd_size++] = h;
-				}
+			// check if vertical adjacent
+			BOX *p1=boxi,*p2=boxj;
+			int l=b_i*4;
+			int r=b_j*4;
+			if(boxi->ll.x > boxj->ll.x ) {
+				// ensures p1 has smaller x
+				p1=boxj;
+				p2=boxi;
+				l=b_j*4;
+				r=b_i*4;
 			}
-		}
-	}
+			VSEG v1,v2;
+			setvseg(&v1,p1->ur.x,p1->ll.y,p1->ur.y);
+			setvseg(&v2,p2->ll.x,p2->ll.y,p2->ur.y);
+			// check if horizontal adjacent
+			if( v1.x  != v2.x  ||
+			    v1.y2 <= v2.y1 ||
+			    v2.y2 <= v1.y1){
+				; // do nothing
+			}
+			else{// they share a vertical edge
+				VSEG v;
+				setvseg(&v,v1.x,v1.y1,v1.y2);
+				g[l+1][l+2] = g[l+2][l+1] = INFINITE;
+				g[r+0][r+3] = g[r+3][r+0] = INFINITE;
+				g[l+1][r+3] = g[r+3][l+1] = INFINITE;
+				g[l+2][r+0] = g[r+0][l+2] = INFINITE;
+				if( v1.y1 > v2.y1 ){
+					g[r+0][l+3] = g[l+3][r+0] = INFINITE;
+					v.y1 = v1.y1;
+				}
+				else if( v1.y1 < v2.y1 ){
+					g[l+1][r+2] = g[r+2][l+1] = INFINITE;
+					v.y1 = v2.y1;
+				}
+				if( v1.y2 > v2.y2 ){
+					g[r+3][l+0] = g[l+0][r+3] = INFINITE;
+					v.y2 = v2.y2;
+				}
+				else if( v1.y2 < v2.y2 ){
+					g[l+2][r+1] = g[r+1][l+2] = INFINITE;
+					v.y2 = v1.y2;
+				}
+				vfbd[vfbd_size++] = v;
+			}
+
+			p1=boxi,p2=boxj;
+			int d=b_i*4;
+			int u=b_j*4;
+			if(boxi->ll.y > boxj->ll.y){
+				p1=boxj;
+				p2=boxi;
+				d=b_j*4;
+				u=b_i*4;
+			}
+			HSEG h1,h2;
+			sethseg(&h1,p1->ur.y,p1->ll.x,p1->ur.x);
+			sethseg(&h2,p2->ll.y,p2->ll.x,p2->ur.x);
+			if( h1.y  != h2.y  || 
+			    h1.x2 <= h2.x1 ||
+			    h2.x2 <= h1.x1){
+				;
+			}
+			else{// they share a horizontal edge
+				HSEG h;
+				sethseg(&h,h1.y,h1.x1,h1.x2);
+				g[d+2][d+3] = g[d+3][d+2] = INFINITE;
+				g[u+0][u+1] = g[u+1][u+0] = INFINITE;
+				g[d+2][u+0] = g[u+0][d+2] = INFINITE;
+				g[d+3][u+1] = g[u+1][d+3] = INFINITE;
+				if( h1.x1 < h2.x1 ){
+					g[u+3][d+1] = g[d+1][u+3] = INFINITE;
+					h.x1 = h2.x1;
+				}
+				else if( h1.x1 > h2.x1 ){
+					g[d+0][u+2] = g[u+2][d+0] = INFINITE;
+					h.x1 = h1.x1;
+				}
+				if( h1.x2 > h2.x2 ){
+					g[u+2][d+0] = g[d+0][u+2] = INFINITE;
+					h.x2 = h2.x2;
+				}
+				else if( h1.x2 < h2.x2 ){
+					g[d+1][u+3] = g[u+3][d+1] = INFINITE;
+					h.x2 = h1.x2;
+				}
+				hfbd[hfbd_size++] = h;
+			}
+		}//end of for b_j
+	}// end of for b_i
 	return 0;
 }
 
@@ -527,27 +517,33 @@ BOOL reach(NODE a,NODE b,int idx_a,int idx_b){
 	// if yes, get MHT and set direction
 	int i,j;
 
+check1:
 	// try path 1: hor first then ver
 	BOOL result = TRUE;
-	for(i=0;i<v_size;i++){// for vertical list
+	// check if horizontal path cut by some block
+	for(i=0;i<v_size;i++){
 		if( intersect(hor[0],vlist[i]) ){
 			result = FALSE;
-			break;
 		}
-		/*
-		if( vlist[i].y1 == hor[0].y ){
-		}
-		else if( vlist[i].y2 == hor[0].y ){
-		}
-		*/
 	}
+
 	if( result != FALSE ){
-		for(j=0;j<h_size;j++){// for horizontal list
+		// check if it passes some forbidden vertical segment
+		for(i=0;i<vfbd_size;i++){
+			if( ver_overlap(hor[0],vfbd[i]) ){
+				result = FALSE;
+				break;
+			}
+		}
+
+		// check if vertical path cut by some block
+		for(j=0;j<h_size;j++){
 			if( intersect(hlist[j],ver[0]) ){
 				result = FALSE;
 				break;
 			}
 		}
+		// check if it passes some forbidden horizontal segment
 	}
 	if( result == TRUE ) {// path 1 succeed
 		// ** judge the moving directions **
@@ -573,6 +569,7 @@ BOOL reach(NODE a,NODE b,int idx_a,int idx_b){
 		return TRUE;
 	}
 
+check2:
 	// try path 2: ver first then hor
 	result = TRUE;
 	for(i=0;i<v_size;i++){// for vertical list

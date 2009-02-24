@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "util.h"
 #include "ds.h"
 #include "connect.h"
@@ -135,12 +136,20 @@ int main(int argc, char * argv[]){
 		report_exit("Error reading file");
 
 	char buf[80];
+	int i;
 	FILE * pFig; 
 	FILE * pFig_rect;
 	preprocess_block(&blockage);
 
 	// start to test
 	construct_g_all(&blockage,&sink);
+
+	printf("H:\n");
+	for(i=0;i<hfbd_size;i++)
+		printf("(%d,%d,%d)\n",hfbd[i].y,hfbd[i].x1,hfbd[i].x2);
+	printf("V:\n");
+	for(i=0;i<vfbd_size;i++)
+		printf("(%d,%d,%d)\n",vfbd[i].x,vfbd[i].y1,vfbd[i].y2);
 
 	int src_idx=block_num*4;
 	//output_g_dirs();
@@ -153,7 +162,6 @@ int main(int argc, char * argv[]){
 	return 0;
 	*/
 
-	int i;
 	int which = all_pair_shortest();
 
 	printf("floyd\n");
@@ -169,18 +177,6 @@ int main(int argc, char * argv[]){
 	   */
 
 	// write results into file
-	/*
-	   pFig = fopen("tmp.fig","w");
-	   init_draw(pFig);
-	   draw_rectangle(pFig,31,22,189,112,SOLID,BLUE);
-	   fclose(pFig);
-	   exit(1);
-	   */
-	/*
-	for(i=0;i<g_num;i++){
-		printf("[%d]=%d\n",i,use_corner[i]);
-	}
-	*/
 	for(i=static_num;i<g_size;i++){
 		printf("node index = %d\n",i);
 		sprintf(buf,"tree_%d.fig",i-static_num);

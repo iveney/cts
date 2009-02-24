@@ -14,14 +14,15 @@
 
 typedef struct ver_seg{
 	UINT x,y1,y2; 
-	int which;   // which blockage
-	DIRECTION d; // L or R
+//	int which;   // which blockage
+//	DIRECTION d; // L or R
 }VSEG;
 typedef struct hor_seg{
 	UINT y,x1,x2; 
-	int which;  // which blockage
-	DIRECTION d; // U or D
+//	int which;  // which blockage
+//	DIRECTION d; // U or D
 }HSEG;
+
 
 /* connect.c */
 UINT **g;
@@ -42,28 +43,30 @@ VSEG *vlist;
 HSEG *hlist;
 int v_size;
 int h_size;
-UINT ** pairs;
-int ** parents;
+UINT **pairs;
+int **parents;
 UINT **shortest_pair[2];
 int **backtrack_pair[2];
 const static char *dir_string[];
 static int width;
-UINT **pairs;
-int **parents;
+VSEG *vfbd;
+HSEG *hfbd;
+int vfbd_size;
+int hfbd_size;
 void setvseg(VSEG *v, UINT xx, UINT yy1, UINT yy2);
 void sethseg(HSEG *h, UINT yy, UINT xx1, UINT xx2);
-void allocate_g(int size);
-BOOL gen_block_node(BLOCKAGE *blockage);
-void copy_sink(SINK *sink);
 void construct_g_all(BLOCKAGE *blocks, SINK *sink);
-void init_g(void);
-void outputg(void);
-void output_dirs(void);
-BOOL intersect(HSEG hor, VSEG ver);
-BOOL reach(NODE a, NODE b, int idx_a, int idx_b);
-void gen_node(BOX *b, NODE *node);
-int gen_segments(BLOCKAGE *block);
+BOOL inRect(NODE *node, BOX *b);
 int constructg(BLOCKAGE *block);
+void allocate_g(int size);
+void init_g(void);
+BOOL gen_block_node(BLOCKAGE *blockage);
+void gen_node(BOX *b, NODE *node);
+int sort_vseg(const void *v1, const void *v2);
+int sort_hseg(const void *h1, const void *h2);
+int gen_segments(BLOCKAGE *block);
+void copy_sink(SINK *sink);
+BOOL reach(NODE a, NODE b, int idx_a, int idx_b);
 int allocate_node(void);
 int insertpt(NODE pt);
 BOOL removept(int pt_idx);
@@ -71,12 +74,15 @@ void addpt(NODE pt, int index, BLOCKAGE *list);
 void delpt(int pt_idx, BLOCKAGE *list);
 void add2pt(NODE s, NODE t, BLOCKAGE *list);
 void init_all_pair(void);
-int all_pair_shortest();
-int floyd();
+int all_pair_shortest(void);
+int floyd(void);
 void init_single_source(int src_idx);
 void dijkstra(BLOCKAGE *list, int src_idx);
+void outputg(void);
+void output_dirs(void);
 void destroy_g(void);
+void cancel_pt(void);
 void destroy_segments(void);
 void free_all(void);
-BOOL inRect(NODE * node,BOX * b);
+
 #endif
