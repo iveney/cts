@@ -22,7 +22,7 @@ typedef struct hor_seg{
 //	int which;  // which blockage
 //	DIRECTION d; // U or D
 }HSEG;
-
+enum SEGTYPE{H,V};
 
 /* connect.c */
 UINT **g;

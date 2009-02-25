@@ -19,6 +19,8 @@ test: $(OBJ)
 	$(CC) -c $(CFLAGS) connect.c -DDEBUG
 	$(CC) -o $(DEBUG) $(CFLAGS) -lm -DDEBUG $(TSTOBJ)
 
-clean:
-	rm -rf rect_* tree_*
+clean:rm
+	
 	rm -rf *.o $(EXE)
+rm:
+	rm -rf rect_* tree_*

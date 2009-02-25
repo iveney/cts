@@ -28,6 +28,7 @@ NODE * g_node=NULL;     // [0..static_num-1]=block corners,(rest)=sinks
 BOOL * use_corner=NULL; // mark if a corner of a block is usable
 BOOL * g_occupy=NULL;   // mark if g_node is a valid node
 NODE * sink_node=NULL;  // points to the first sink node in g_node
+BLOCKAGE * pBlock=NULL; // pointer to blockage list
 int block_num=0;	// number of blockages
 int static_num=0;       // number of static nodes (shoulb be block_num*4)
 int sink_num=0;         // number of sinks
@@ -45,6 +46,9 @@ VSEG * vfbd = NULL;  //
 HSEG * hfbd = NULL;  //
 int vfbd_size=0;
 int hfbd_size=0;
+
+// stores the forbidden static node
+BOOL ** fbdnode;
 
 // variables for dijkstra
 UINT * shortest=NULL;   // shortest path shortest vector, size = g_size
@@ -86,6 +90,33 @@ inline BOOL intersect(HSEG hor,VSEG ver){
 	return FALSE;
 }
 
+// determins if a segment is in block(including partially in)
+inline BOOL inBlock(BOX * pb, void * pSeg, int segtype){
+	HSEG *ph;
+	VSEG *pv;
+	switch(segtype){
+	case H:
+		ph = (HSEG*)pSeg;
+		if( ph->y > pb->ll.y && ph->y < pb->ur.y ){
+			if( (ph->x1>pb->ll.x && ph->x1<pb->ur.x) ||
+			    (ph->x2>pb->ll.x && ph->x2<pb->ur.x) ||
+			    (ph->x1>=pb->ll.x && ph->x2<=pb->ur.x) )
+				return TRUE;
+		}
+		break;
+	case V:
+		pv = (VSEG*)pSeg;
+		if( pv->x > pb->ll.x && pv->x < pb->ur.x ){
+			if( (pv->y1>pb->ll.y && pv->y1<pb->ur.y) ||
+			    (pv->y2>pb->ll.y && pv->y2<pb->ur.y) ||
+			    (pv->y1>=pb->ll.y && pv->y2<=pb->ur.y) )
+				return TRUE;
+		}
+		break;
+	}
+	return FALSE;
+}
+
 inline int ver_overlap(VSEG v1,VSEG v2){
 	if( v1.x != v2.x ) return 0;
 	else if (v1.y2<=v2.y1 || v1.y1>=v2.y2) return 0;
@@ -104,6 +135,7 @@ inline int hor_overlap(HSEG h1,HSEG h2){
 // construct the whole graph with a list of blockages and sinks
 void construct_g_all(BLOCKAGE * blocks, SINK * sink){
 	// first construct the static part of graph(blockage corners)
+	pBlock = blocks;
 	block_num = blocks->num;
 	sink_num = sink->num;
 	static_num = block_num*4;
@@ -144,55 +176,21 @@ BOOL inRect(NODE * node,BOX * b){
 	return FALSE;
 }
 
-// take a list of blockage, construct a graph for shortest path computation
-// REQUIRE: external storage g
-// list : pointer to BLOCKAGE
-int constructg(BLOCKAGE * block){
-	// start to construct the graph 
-	int b_i,b_j;
-	int cor_i,cor_j;
-	// for each corner of each blockage, 
-	// determine what corners it can each
-	// (in the sense of manhattan distance) : 4 for-loop
+#define setfbdnode(a,b,value) {fbdnode[(a)][(b)]=fbdnode[(b)][(a)]=(value);}
+#define setgnode(a,b,value) {g[(a)][(b)]=g[(b)][(a)]=(value);}
+#define set_g_fbd(a,b) {setfbdnode((a),(b),TRUE);setgnode((a),(b),INFINITE);}
+
+int mark_forbidden(BLOCKAGE * block){
 	NODE *nodei,*nodej;
 	BOX * boxi,*boxj;
+	int b_i,b_j;
 	for(b_i=0;b_i<block->num;b_i++){
-		// for block b_i, connect its four points(self connect)
 		boxi = &block->pool[b_i];
 		nodei = g_node + b_i*4;
-		reach(nodei[0],nodei[1],b_i*4+0,b_i*4+1);
-		reach(nodei[1],nodei[2],b_i*4+1,b_i*4+2);
-		reach(nodei[2],nodei[3],b_i*4+2,b_i*4+3);
-		reach(nodei[3],nodei[0],b_i*4+3,b_i*4+0);
-
 		for(b_j=b_i+1;b_j<block->num;b_j++){
 			boxj = &block->pool[b_j];
 			nodej = g_node+b_j*4;
-			// generate the 4 nodes of each blockage
-			// 3--2
-			// |  |
-			// 0--1
-
-			for(cor_i=0;cor_i<4;cor_i++){
-				// handle the intersection case
-				if( inRect(&nodei[cor_i],boxj) ){
-					// mark it unusable
-					use_corner[b_i*4+cor_i] = FALSE;
-					continue;
-				}
-				for(cor_j=0;cor_j<4;cor_j++){
-					if( inRect(&nodej[cor_j],boxi) ){
-						use_corner[b_j*4+cor_j] = FALSE;
-						continue;
-					}
-					// need not to calculate the same point
-					//if(b_i == b_j && cor_i == cor_j ) continue;
-					int idx1 = b_i*4+cor_i;
-					int idx2 = b_j*4+cor_j;
-					reach( nodei[cor_i], nodej[cor_j],
-					       idx1,idx2);
-				}// end of for cor_j
-			}// end of for cor_i
+			///// checking adjacency  /////
 
 			// check if vertical adjacent
 			BOX *p1=boxi,*p2=boxj;
@@ -217,29 +215,55 @@ int constructg(BLOCKAGE * block){
 			else{// they share a vertical edge
 				VSEG v;
 				setvseg(&v,v1.x,v1.y1,v1.y2);
-				g[l+1][l+2] = g[l+2][l+1] = INFINITE;
-				g[r+0][r+3] = g[r+3][r+0] = INFINITE;
-				g[l+1][r+3] = g[r+3][l+1] = INFINITE;
-				g[l+2][r+0] = g[r+0][l+2] = INFINITE;
-				if( v1.y1 > v2.y1 ){
-					g[r+0][l+3] = g[l+3][r+0] = INFINITE;
-					v.y1 = v1.y1;
+				set_g_fbd(l+1,l+2);
+				set_g_fbd(r+0,r+3);
+				set_g_fbd(l+1,r+3);
+				set_g_fbd(l+2,r+0);
+
+				set_g_fbd(l+1,r+3);
+				set_g_fbd(l+2,r+0);
+				//g[l+1][l+2] = g[l+2][l+1] = INFINITE;
+				//g[r+0][r+3] = g[r+3][r+0] = INFINITE;
+				//g[l+1][r+3] = g[r+3][l+1] = INFINITE;
+				//g[l+2][r+0] = g[r+0][l+2] = INFINITE;
+				//fbdnode[l+1][r+3]=fbdnode[r+3][l+1] = 
+				//fbdnode[l+2][r+0]=fbdnode[r+0][l+2] = TRUE;
+				v.y1=MAX(v1.y1,v2.y1);
+				v.y2=MIN(v1.y2,v2.y2);
+				if( v1.y1 < v2.y1 ){// (3,0)
+					set_g_fbd(l+3,r+0);
+					//g[l+3][r+0] = g[r+0][l+3] = INFINITE;
+					//fbdnode[l+3][r+0] = fbdnode[r+0][l+3] = TRUE;
+					if( v1.y2 < v2.y2 ){//(2,1)
+						set_g_fbd(l+2,r+1);
+						//g[l+2][r+1] = g[r+1][l+2] = INFINITE;
+						//fp[2][1] = TRUE;
+					}
+					else if( v1.y2 > v2.y2 ){//(0,3)
+						set_g_fbd(l+0,r+3);
+						//g[l+0][r+3] = g[r+3][l+0] = INFINITE;
+						//fp[0][3] = TRUE;
+					}
 				}
-				else if( v1.y1 < v2.y1 ){
-					g[l+1][r+2] = g[r+2][l+1] = INFINITE;
-					v.y1 = v2.y1;
-				}
-				if( v1.y2 > v2.y2 ){
-					g[r+3][l+0] = g[l+0][r+3] = INFINITE;
-					v.y2 = v2.y2;
-				}
-				else if( v1.y2 < v2.y2 ){
-					g[l+2][r+1] = g[r+1][l+2] = INFINITE;
-					v.y2 = v1.y2;
+				else if( v1.y1 > v2.y1 ){// (1,2)
+					set_g_fbd(l+1,r+2);
+					//g[l+1][r+2] = g[r+2][l+1] = INFINITE;
+					//fp[1][2] = TRUE;
+					if( v1.y2 > v2.y2 ){// (0,3)
+						set_g_fbd(l+0,r+3);
+						//g[l+0][r+3] = g[r+3][l+0] = INFINITE;
+						//fp[0][3] = TRUE;
+					}
+					else if( v1.y2 < v2.y2 ){// (2,1)
+						set_g_fbd(l+2,r+1);
+						//g[l+2][r+1] = g[r+1][l+2] = INFINITE;
+						//fp[2][1] = TRUE;
+					}
 				}
 				vfbd[vfbd_size++] = v;
 			}
 
+			//memset(fp,FALSE,sizeof(fp));
 			p1=boxi,p2=boxj;
 			int d=b_i*4;
 			int u=b_j*4;
@@ -260,29 +284,117 @@ int constructg(BLOCKAGE * block){
 			else{// they share a horizontal edge
 				HSEG h;
 				sethseg(&h,h1.y,h1.x1,h1.x2);
-				g[d+2][d+3] = g[d+3][d+2] = INFINITE;
-				g[u+0][u+1] = g[u+1][u+0] = INFINITE;
-				g[d+2][u+0] = g[u+0][d+2] = INFINITE;
-				g[d+3][u+1] = g[u+1][d+3] = INFINITE;
+				set_g_fbd(d+2,d+3); 
+				set_g_fbd(u+0,u+1); 
+				set_g_fbd(d+2,u+0); 				
+				set_g_fbd(d+3,u+1); 
+
+				set_g_fbd(d+2,u+0);
+				set_g_fbd(d+3,u+1);
+				//g[d+2][d+3] = g[d+3][d+2] = INFINITE;
+				//g[u+0][u+1] = g[u+1][u+0] = INFINITE;
+				//g[d+2][u+0] = g[u+0][d+2] = INFINITE;
+				//g[d+3][u+1] = g[u+1][d+3] = INFINITE;
+				//fp[2][0] = fp[3][1] = TRUE;
+				h.x1=MAX(h1.x1,h2.x1);
+				h.x2=MIN(h1.x2,h2.x2);
 				if( h1.x1 < h2.x1 ){
-					g[u+3][d+1] = g[d+1][u+3] = INFINITE;
-					h.x1 = h2.x1;
+					set_g_fbd(d+1,u+0);
+					//g[d+1][u+0] = g[u+3][d+0] = INFINITE;
+					//fp[1][0] = TRUE;
+					if( h1.x2 < h2.x2 ){
+						set_g_fbd(d+2,u+3);
+						//g[d+2][u+3] = g[u+3][d+2] = INFINITE;
+						//fp[2][3] = TRUE;
+					}
+					else if( h1.x2 > h2.x2 ){
+						set_g_fbd(d+0,u+1);
+						//g[d+0][u+1] = g[u+1][d+0] = INFINITE;
+						//fp[0][1] = TRUE;
+						h.x2 = h2.x2;
+					}
 				}
 				else if( h1.x1 > h2.x1 ){
-					g[d+0][u+2] = g[u+2][d+0] = INFINITE;
-					h.x1 = h1.x1;
-				}
-				if( h1.x2 > h2.x2 ){
-					g[u+2][d+0] = g[d+0][u+2] = INFINITE;
-					h.x2 = h2.x2;
-				}
-				else if( h1.x2 < h2.x2 ){
-					g[d+1][u+3] = g[u+3][d+1] = INFINITE;
-					h.x2 = h1.x2;
+					set_g_fbd(d+3,u+3);
+					//g[d+3][u+2] = g[u+2][d+3] = INFINITE;
+					//fp[3][2] = TRUE;
+					if( h1.x2 > h2.x2 ){
+						set_g_fbd(d+0,u+1);
+						//g[d+0][u+1] = g[u+1][d+0] = INFINITE;
+						//fp[0][1] = TRUE;
+					}
+					else if( h1.x2 < h2.x2 ){
+						set_g_fbd(d+2,u+3);
+						//g[d+2][u+3] = g[u+3][d+2] = INFINITE;
+						//fp[2][3] = TRUE;
+					}
 				}
 				hfbd[hfbd_size++] = h;
-			}
+			}// end of share horizontal edge
+		}// end of for b_j
+	}//end of for b_i
+	return 0;
+	///// end of checking adjacency  /////
+}
+
+// take a list of blockage, construct a graph for shortest path computation
+// REQUIRE: external storage g
+// list : pointer to BLOCKAGE
+int constructg(BLOCKAGE * block){
+	// start to construct the graph 
+	mark_forbidden(block);
+	int b_i,b_j;
+	int cor_i,cor_j;
+	// for each corner of each blockage, 
+	// determine what corners it can each
+	// (in the sense of manhattan distance) : 4 for-loop
+	NODE *nodei,*nodej;
+	BOX * boxi,*boxj;
+	for(b_i=0;b_i<block->num;b_i++){
+		boxi = &block->pool[b_i];
+		nodei = g_node + b_i*4;
+		for(b_j=b_i+1;b_j<block->num;b_j++){
+			boxj = &block->pool[b_j];
+			nodej = g_node+b_j*4;
+			BOOL fp[4][4]; // forbid pair
+			memset(fp,FALSE,sizeof(fp));
+			// generate the 4 nodes of each blockage
+			// 3--2
+			// |  |
+			// 0--1
+
+			for(cor_i=0;cor_i<4;cor_i++){
+				// handle the intersection case
+				if( inRect(&nodei[cor_i],boxj) ){
+					// mark it unusable
+					use_corner[b_i*4+cor_i] = FALSE;
+					continue;
+				}
+				for(cor_j=0;cor_j<4;cor_j++){
+					if( inRect(&nodej[cor_j],boxi) ){
+						use_corner[b_j*4+cor_j] = FALSE;
+						continue;
+					}
+					// marked as not connectable
+					// need not to calculate the same point
+					int idx1 = b_i*4+cor_i;
+					int idx2 = b_j*4+cor_j;
+					if( fbdnode[idx1][idx2] ) continue;
+					BOOL result = reach( nodei[cor_i], nodej[cor_j],
+					       idx1,idx2);
+					//if( cor_i == 3 && cor_j == 0 )
+						//printf("result = %d\n",result);
+				}// end of for cor_j
+			}// end of for cor_i
+
 		}//end of for b_j
+
+		// for block b_i, connect its four points(self connect)
+		reach(nodei[0],nodei[1],b_i*4+0,b_i*4+1);
+		reach(nodei[1],nodei[2],b_i*4+1,b_i*4+2);
+		reach(nodei[2],nodei[3],b_i*4+2,b_i*4+3);
+		reach(nodei[3],nodei[0],b_i*4+3,b_i*4+0);
+
 	}// end of for b_i
 	return 0;
 }
@@ -299,6 +411,7 @@ void allocate_g(int size){
 	sink_node	= g_node+static_num;   // points to first sink node
 	g_occupy	= (BOOL*)  malloc((g_size)*sizeof(BOOL));
 	dirs		= (DIRECTION**) malloc((g_size)*sizeof(DIRECTION*));
+	fbdnode         = (BOOL**) malloc((g_size)*sizeof(BOOL*));
 
 	// for dijkstra
 	shortest = (UINT *) malloc(g_size * sizeof(UINT));
@@ -320,6 +433,7 @@ void allocate_g(int size){
 	for(i=0;i<g_size;i++){// 2-dimension allocation
 		g[i] = (UINT *) malloc(g_size*sizeof(UINT));
 		dirs[i] = (DIRECTION *) malloc(g_size*sizeof(DIRECTION));
+		fbdnode[i] = (BOOL*) malloc(g_size*sizeof(UINT));
 	}
 }
 
@@ -332,6 +446,7 @@ void init_g(){
 			if(i==j) g[i][j] = 0;
 			else g[i][j] = INFINITE;
 			dirs[i][j] = INVALID;
+			fbdnode[i][j] = FALSE;
 		}
 		g_occupy[i]=FALSE;
 		use_corner[i]=TRUE;
@@ -512,42 +627,55 @@ BOOL reach(NODE a,NODE b,int idx_a,int idx_b){
 		}
 	}
 	
-	
 	// check if either of the path is valid
 	// if yes, get MHT and set direction
 	int i,j;
 
-check1:
 	// try path 1: hor first then ver
-	BOOL result = TRUE;
 	// check if horizontal path cut by some block
-	for(i=0;i<v_size;i++){
-		if( intersect(hor[0],vlist[i]) ){
-			result = FALSE;
+	for(i=0;i<v_size;i++)
+		if( intersect(hor[0],vlist[i]) )
+			goto CHECK_PATH2;
+	printf("pass 1\n");
+
+	// check if it passes some forbidden vertical segment
+	for(i=0;i<hfbd_size;i++)
+		if( hor_overlap(hor[0],hfbd[i]) )
+			goto CHECK_PATH2;
+	printf("pass 2\n");
+
+	// check if vertical path cut by some block
+	for(j=0;j<h_size;j++)
+		if( intersect(hlist[j],ver[0]) )
+			goto CHECK_PATH2;
+	printf("pass 3\n");
+
+	// check if it passes some forbidden horizontal segment
+	for(j=0;j<vfbd_size;j++){
+		//printf("checking:(%d %d %d)\n",ver[0].x,ver[0].y1,ver[0].y2);
+		//printf("and:(%d %d %d)\n",vfbd[j].x,vfbd[j].y1,vfbd[j].y2);
+		if( ver_overlap(ver[0],vfbd[j]) )
+			goto CHECK_PATH2;
+	}
+	printf("pass 4\n");
+
+	// finally... check if it is inside blockages
+	for(i=0;i<pBlock->num;i++){
+		if( inBlock(&pBlock->pool[i],(void*)&hor[0],H) ){
+			printf("hor violating block %d\n",i);
+			goto CHECK_PATH2;
+		}
+		if( inBlock(&pBlock->pool[i],(void*)&ver[0],V) )
+		{
+			printf("ver violating block %d\n",i);
+			goto CHECK_PATH2;
 		}
 	}
+	printf("pass 5\n");
 
-	if( result != FALSE ){
-		// check if it passes some forbidden vertical segment
-		for(i=0;i<vfbd_size;i++){
-			if( ver_overlap(hor[0],vfbd[i]) ){
-				result = FALSE;
-				break;
-			}
-		}
-
-		// check if vertical path cut by some block
-		for(j=0;j<h_size;j++){
-			if( intersect(hlist[j],ver[0]) ){
-				result = FALSE;
-				break;
-			}
-		}
-		// check if it passes some forbidden horizontal segment
-	}
-	if( result == TRUE ) {// path 1 succeed
-		// ** judge the moving directions **
-		switch(relative){
+	// path 1 succeed
+	// ** judge the moving directions **
+	switch(relative){
 		case LL:
 			*a2b = RIGHT; *b2a = DOWN; 
 			break;
@@ -560,34 +688,43 @@ check1:
 		case UR:
 			*a2b = LEFT;  *b2a = UP;
 			break;
-		}
-		g[idx_a][idx_b] = g[idx_b][idx_a] = MHT(a,b);
+	}
+	g[idx_a][idx_b] = g[idx_b][idx_a] = MHT(a,b);
 #ifdef DEBUG
-		printf("UPDATE : (%lu,%lu) -> (%lu,%lu) : %lu\n",
-				a.x,a.y,b.x,b.y,g[idx_a][idx_b]);
+	printf("UPDATE : (%lu,%lu) -> (%lu,%lu) : %lu\n",
+			a.x,a.y,b.x,b.y,g[idx_a][idx_b]);
 #endif
-		return TRUE;
+	goto SUCCEED;
+
+CHECK_PATH2:
+	// try path 2: ver first then hor
+	// check if horizontal path cut by some block
+	for(i=0;i<v_size;i++)
+		if( intersect(hor[1],vlist[i]) )
+			goto FAIL;
+
+	// check if it passes some forbidden vertical segment
+	for(i=0;i<hfbd_size;i++)
+		if( hor_overlap(hor[1],hfbd[i]) )
+			goto FAIL;
+
+	// check if vertical path cut by some block
+	for(j=0;j<h_size;j++)
+		if( intersect(hlist[j],ver[1]) )
+			goto FAIL;
+
+	// check if it passes some forbidden horizontal segment
+	for(j=0;j<vfbd_size;j++)
+		if( ver_overlap(ver[1],vfbd[j]) )
+			goto FAIL;
+
+	for(i=0;i<pBlock->num;i++){
+		if( inBlock(&pBlock->pool[i],(void*)&hor[1],H) || 
+		    inBlock(&pBlock->pool[i],(void*)&ver[1],V) )
+		    goto FAIL;
 	}
 
-check2:
-	// try path 2: ver first then hor
-	result = TRUE;
-	for(i=0;i<v_size;i++){// for vertical list
-		if( intersect(hor[1],vlist[i]) ){
-			result = FALSE;
-			break;
-		}
-	}
-	if( result != FALSE ){
-		for(j=0;j<h_size;j++){// for horizontal list
-			if( intersect(hlist[j],ver[1]) ){
-				result = FALSE;
-				break;
-			}
-		}
-	}
-	if( result == TRUE ) {// path 2 succeed
-		switch(relative){
+	switch(relative){
 		case LL:
 			*a2b = UP;   *b2a = LEFT; 
 			break;
@@ -600,15 +737,15 @@ check2:
 		case UR:
 			*a2b = DOWN;  *b2a = RIGHT;
 			break;
-		}
-		g[idx_a][idx_b] = g[idx_b][idx_a] = MHT(a,b);
-#ifdef DEBUG
-		printf("UPDATE : (%lu,%lu) -> (%lu,%lu) : %lu\n",
-				a.x,a.y,b.x,b.y,g[idx_a][idx_b]);
-#endif
-		return TRUE;
 	}
-
+	g[idx_a][idx_b] = g[idx_b][idx_a] = MHT(a,b);
+#ifdef DEBUG
+	printf("UPDATE : (%lu,%lu) -> (%lu,%lu) : %lu\n",
+			a.x,a.y,b.x,b.y,g[idx_a][idx_b]);
+#endif
+SUCCEED:
+	return TRUE;
+FAIL:
 	return FALSE;// neither succeed
 }
 
@@ -643,8 +780,9 @@ int insertpt(NODE pt){
 	for(i=0;i<g_size;i++){
 		if( i!=pt_idx && g_occupy[i] == TRUE &&
 		    use_corner[i] == TRUE ){
-			//printf("reaching:%d -> %d\n",pt_idx,i);
-			reach(pt,g_node[i],pt_idx,i);
+			printf("reaching:%d -> %d\n",pt_idx,i);
+			BOOL result = reach(pt,g_node[i],pt_idx,i);
+			printf("RESULT = %d\n",result);
 		}
 	}
 	++g_num;
@@ -876,9 +1014,11 @@ void destroy_g(){
 	for(i=0;i<g_size;i++) {
 		free(g[i]);
 		free(dirs[i]);
+		free(fbdnode[i]);
 	}
 	free(g);
 	free(dirs);
+	free(fbdnode);
 
 	int x,y;
 	for(x=0;x<2;x++){

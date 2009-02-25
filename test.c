@@ -144,6 +144,7 @@ int main(int argc, char * argv[]){
 	// start to test
 	construct_g_all(&blockage,&sink);
 
+	printf("use_corner=%d\n",use_corner[5]);
 	printf("H:\n");
 	for(i=0;i<hfbd_size;i++)
 		printf("(%d,%d,%d)\n",hfbd[i].y,hfbd[i].x1,hfbd[i].x2);
