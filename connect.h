@@ -25,6 +25,8 @@ typedef struct hor_seg{
 enum SEGTYPE{H,V};
 
 /* connect.c */
+
+/* connect.c */
 UINT **g;
 int g_size;
 UINT *shortest;
@@ -53,10 +55,13 @@ VSEG *vfbd;
 HSEG *hfbd;
 int vfbd_size;
 int hfbd_size;
+BLOCKAGE *pBlock;
+BOOL **fbdnode;
 void setvseg(VSEG *v, UINT xx, UINT yy1, UINT yy2);
 void sethseg(HSEG *h, UINT yy, UINT xx1, UINT xx2);
 void construct_g_all(BLOCKAGE *blocks, SINK *sink);
-BOOL inRect(NODE *node, BOX *b);
+BOOL pt_in_rect(NODE *node, BOX *b);
+int mark_forbidden(BLOCKAGE *block);
 int constructg(BLOCKAGE *block);
 void allocate_g(int size);
 void init_g(void);
@@ -78,11 +83,12 @@ int all_pair_shortest(void);
 int floyd(void);
 void init_single_source(int src_idx);
 void dijkstra(BLOCKAGE *list, int src_idx);
+int sort_box_hor(const void *p1, const void *p2);
+int sort_box_ver(const void *p1, const void *p2);
+void preprocess_block(BLOCKAGE *pBlock);
 void outputg(void);
 void output_dirs(void);
 void destroy_g(void);
-void cancel_pt(void);
 void destroy_segments(void);
 void free_all(void);
-
 #endif

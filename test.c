@@ -67,65 +67,6 @@ void print_path(int which,int src_idx,int dst_idx){
 }
 
 
-#define output_block(b) {printf("(%d,%d)\t(%d,%d)\n",b.ll.x,b.ll.y,b.ur.x,b.ur.y);}
-int sort_box_hor(const void * p1,const void *p2){
-	BOX * l = (BOX *) p1;
-	BOX * r = (BOX *) p2;
-	return (l->ll.x - r->ll.x);
-}
-int sort_box_ver(const void * p1,const void *p2){
-	BOX * l = (BOX *) p1;
-	BOX * r = (BOX *) p2;
-	return (l->ll.y - r->ll.y);
-}
-
-// preprocess the block to merge the blocks to larger rectangle shape
-void preprocess_block(BLOCKAGE * pBlock){
-	int n = pBlock->num,i,j;
-	int size=0;
-	BOX * pBox = malloc(sizeof(BOX)*n);
-	BOX * pPool = pBlock->pool;
-	BOOL * m = malloc(sizeof(BOOL)*n);
-	memcpy(pBox,pBlock->pool,sizeof(BOX)*n);
-	memset(m,FALSE,sizeof(BOOL)*n);
-	qsort(pPool,n,sizeof(BOX),sort_box_hor); // sort horizontally
-	// merge horizontal: from pPool to pBox
-	for(i=0;i<n;i++){
-		if( m[i] == TRUE ) continue;
-		BOX current = pPool[i];
-		for(j=i+1;j<n && current.ur.x >= pPool[j].ll.x ;j++){
-			if(current.ur.y == pPool[j].ur.y &&
-			   current.ll.y == pPool[j].ll.y){
-				current.ur = pPool[j].ur;
-				m[j] = TRUE;
-			}
-		}
-		pBox[size++] = current;
-	}
-	// merge vertical: from pBox to pPool
-	int new_size=0;
-	memset(m,FALSE,sizeof(BOOL)*n);
-	qsort(pBox,size,sizeof(BOX),sort_box_ver); // sort vertically
-	for(i=0;i<size;i++){
-		if( m[i] == TRUE ) continue;
-		BOX current = pBox[i];
-		for(j=i+1;j<size && current.ur.y >= pBox[j].ll.y;j++){
-			if( current.ur.x == pBox[j].ur.x &&
-			    current.ll.x == pBox[j].ll.x){
-				current.ur = pBox[j].ur;
-				m[j] = TRUE;
-			}
-		}
-		pPool[new_size++] = current;
-	}
-	pBlock->num = new_size; // update size
-#ifdef DEBUG
-	for(i=0;i<new_size;i++){ output_block(pBlock->pool[i]); }
-#endif
-	free(pBox);
-	free(m);
-}
-
 int main(int argc, char * argv[]){
 	FILE *ifp,*ofp; 
 	if(argc > 3 || argc < 2)
@@ -139,12 +80,11 @@ int main(int argc, char * argv[]){
 	int i;
 	FILE * pFig; 
 	FILE * pFig_rect;
-	preprocess_block(&blockage);
 
 	// start to test
+	preprocess_block(&blockage);
 	construct_g_all(&blockage,&sink);
 
-	printf("use_corner=%d\n",use_corner[5]);
 	printf("H:\n");
 	for(i=0;i<hfbd_size;i++)
 		printf("(%d,%d,%d)\n",hfbd[i].y,hfbd[i].x1,hfbd[i].x2);
