@@ -7,7 +7,7 @@ OUTPUT=$NAME
 declare -a OUT
 rm -rf table
 
-for i in `seq 0 10 350`
+for i in `seq 0 10001`
 do
 	INPUT="$NAME.$i"
 	OUTPUT="${INPUT}.out"
@@ -24,6 +24,7 @@ do
 	DELTA=`echo "$VL - $VH" | bc`
 	# output data
 	echo -e "$i\t$VL\t$VH\t$DELTA" >> table
+	rm -rf $INPUT $OUTPUT
 done
 
 rm *.spice
