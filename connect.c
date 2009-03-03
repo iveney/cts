@@ -4,7 +4,7 @@
 // path. Also some global varibales for use
 //
 // Author : Xiao Zigang
-// Modifed: < Wed Feb 25 10:11:29 HKT 2009 >
+// Modifed: < Tue Mar  3 22:44:30 HKT 2009 >
 // ----------------------------------------------------------------//
 
 #include <stdio.h>
@@ -55,7 +55,9 @@ BOOL ** fbdnode;
 UINT * shortest=NULL;   // shortest path shortest vector, size = g_size
 int  * via=NULL;        // backtrack vector, size = g_size;
 BOOL * mark=NULL;       // mark if a node is visited
-int * disjoint_parent;
+
+// used for disjoint set in order to find reverse path of a single source
+int * disjoint_parent;  
 int * disjoint_height;
 
 // variables for floyd, use swtich array technique
@@ -117,11 +119,13 @@ inline BOOL inBlock(BOX * pb, void * pSeg, int segtype){
 	return FALSE;
 }
 
+// determine if two vertical segment overlaps each other
 inline int ver_overlap(VSEG v1,VSEG v2){
 	if( v1.x != v2.x || v1.y2<=v2.y1 || v1.y1>=v2.y2 ) return 0;
 	return 1;
 }
 
+// determine if two horizontal segment overlaps each other
 inline int hor_overlap(HSEG h1,HSEG h2){
 	if( h1.y != h2.y || h1.x2<=h2.x1 || h1.x1>=h2.x2) return 0;
 	return 1;
@@ -174,11 +178,15 @@ BOOL pt_in_rect(NODE * node,BOX * b){
 	return FALSE;
 }
 
+
+// useful macro, in order to shorten the code...
 #define setfbdnode(a,b,value) {fbdnode[(a)][(b)]=fbdnode[(b)][(a)]=(value);}
 #define setgnode(a,b,value) {g[(a)][(b)]=g[(b)][(a)]=(value);}
 #define set_g_fbd(a,b) {setfbdnode((a),(b),TRUE);setgnode((a),(b),INFINITE);}
 
 // check the adjacency edges of blockages, mark it as forbidden
+// note that the cases are very complicated and the code should be 
+// modified carefully
 int mark_forbidden(BLOCKAGE * block){
 	NODE *nodei,*nodej;
 	BOX * boxi,*boxj;
@@ -882,13 +890,16 @@ void init_single_source(int src_idx){
 	mark[src_idx] = TRUE;
 }
 
+// for a single source shortest path tree
+// find each node's representative element
+// i.e. the one which parents are source node
 int zip_path(int i){
 	if(disjoint_parent[i] == -1 ) return i;
-	else 
-		disjoint_parent[i]= zip_path(disjoint_parent[i]);
+	else disjoint_parent[i]= zip_path(disjoint_parent[i]);
 }
 
-
+// after calling dijkstra, need to update that node's 
+// symetric entry in floyd's distance matrix and parent matrix
 void update_dist(BLOCKAGE * list, int src){
 	// first calculate SSSP
 	dijkstra(&list,src);
