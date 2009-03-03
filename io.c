@@ -25,8 +25,9 @@ extern int num_buffer;
 extern int num_wire ; 
 extern int num_sinknode ; 
 extern int num_total_nodes ; 
-
-
+extern int highway_extra_buf ;
+extern int * sink_alt_array;
+extern int mid_sink_num;
 int InputFile(FILE *ifp){
 
 char buf[SMALL_BUF_SIZE] ; 
@@ -132,13 +133,14 @@ double d2 = 0.0;
 	buflib.lib = (BUFFER *) malloc (sizeof(BUFFER) * buflib.num);
 	for(i = 0 ; i < buflib.num; i++){
 		fgets(buf,SMALL_BUF_SIZE,ifp);
-		sscanf(buf,"%d %s %d %d %d",&x1,prefix1,&y1,&x2,&y2);
+		sscanf(buf,"%d %s %d %lf %lf %lf",&x1,prefix1,&y1,&(buflib.lib[i].icap),&(buflib.lib[i].ocap),&(buflib.lib[i].ores));
 		buflib.lib[i].buf_id = x1 ;
 		buflib.lib[i].spice_subckt = (char *)malloc(sizeof(char)*SMALL_BUF_SIZE);
 		strcpy(buflib.lib[i].spice_subckt, prefix1);
 		buflib.lib[i].inverted = y1; 
-		buflib.lib[i].icap = x2; 
-		buflib.lib[i].ocap = y2;
+/*		buflib.lib[i].icap = x2; 
+		buflib.lib[i].ocap = y2;*/
+		;
 
 	}
 
@@ -214,7 +216,7 @@ int check_input(){
 	
 	printf("num buflib %d\n", buflib.num);
 	for(i=0;i<buflib.num;i++)
-		printf("%d %s %d %d %d\n",buflib.lib[i].buf_id,buflib.lib[i].spice_subckt,buflib.lib[i].inverted, buflib.lib[i].icap,buflib.lib[i].ocap);
+		printf("%d %s %d %f %f %f\n",buflib.lib[i].buf_id,buflib.lib[i].spice_subckt,buflib.lib[i].inverted, buflib.lib[i].icap,buflib.lib[i].ocap,buflib.lib[i].ores);
 	
 	printf("simulation vdd %f %f\n",vddlib.lib[0],vddlib.lib[1]);
 	
@@ -246,9 +248,61 @@ void output_file(FILE *fp, BUF_NODE ** OBUF, DME_TREE_NODE * OT, DME_TREE_NODE *
 	Out_put_files_sink(fp, OT) ; 
 	fprintf(fp,"num wire %d\n", num_wire);
 	Out_put_files_connect(fp,OBUF, OT);	
-	fprintf(fp,"num buffer %d\n",num_buffer);
+	fprintf(fp,"num buffer %d\n",num_buffer*2+highway_extra_buf*HIGHWAY);
 	Out_put_files_buf(fp, num_total_nodes, OBUF, OTmap);
 
 }
 
+void get_init_delay(DME_NODE *L){
+	int i;
+	int x;
+	double y;
+	char buf[SMALL_BUF_SIZE] ; 
+	FILE * ifp = fopen( "initDelay.txt", "r") ;
+	double * tmp = (double *) malloc (sizeof(double)*sink.num);
 
+	for(i=0;i<sink.num*4; i++){
+		fgets(buf,SMALL_BUF_SIZE,ifp);
+		sscanf(buf,"%d %lf",&x,&y);
+//		printf("%d %f\n",x,y);
+		tmp[x-1] += y;
+	}
+	for(i=0;i<sink.num; i++){
+		tmp[i] /= 4.0f;
+		L[i].to_sink_delay = tmp[i];
+//		printf("%d %f\n",i,L[i].to_sink_delay);
+	}
+	fclose(ifp);
+	
+}
+
+void fprint_sink(FILE *fp, DME_TREE_NODE * Troot){
+	if ( Troot == NULL)
+		return ;
+	if ( Troot->sink_index != -1)
+        fprintf(fp,"%d %d %d %f\n",Troot->sink_index,Troot->x,Troot->y,Troot->capacitance);
+	fprint_sink(fp,Troot->ls);
+	fprint_sink(fp,Troot->rs);
+}	
+
+void gen_inputfile(FILE * ifp,DME_TREE_NODE * Troot, DME_TREE_NODE ** map){
+int i;
+int x1,y1,x2,y2;
+	x1 = frame.ll.x ; 	y1 = frame.ll.y;
+	x2 = frame.ur.x ; 	y2 = frame.ur.y;
+        fprintf(ifp,"%d %d %d %d\n", x1,y1,x2,y2);
+        fprintf(ifp,"source %d %d %d %d\n",source.name,source.location.x,source.location.y,source.bufname);
+        fprintf(ifp,"num sink %d\n",mid_sink_num);
+	fprint_sink(ifp,Troot);
+        fprintf(ifp,"num wirelib %d\n",wirelib.num);
+        for(i = 0 ; i < wirelib.num; i++)
+                fprintf(ifp,"%d %f %f\n",wirelib.lib[i].wiretype,wirelib.lib[i].r,wirelib.lib[i].c);
+        fprintf(ifp,"num buflib %d\n",buflib.num);
+        for(i=0; i< buflib.num; i++)
+                fprintf(ifp,"%d %s %d %f %f %f\n",buflib.lib[i].buf_id,buflib.lib[i].spice_subckt,buflib.lib[i].inverted,buflib.lib[i].icap,buflib.lib[i].ocap,buflib.lib[i].ores);
+        fprintf(ifp,"simulation vdd %.1f %.1f\n",vddlib.lib[0],vddlib.lib[1]);
+        fprintf(ifp,"limit slew %d\n",SlewLimit);
+        fprintf(ifp,"limit cap %d\n",CapLimit);
+        fprintf(ifp,"num blockage %d\n", 0);
+
+}
