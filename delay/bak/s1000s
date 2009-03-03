@@ -1,0 +1,13 @@
+sourcenode 0 0
+num node 2 
+1 1500000 0
+4 1500000 0 
+num sinknode 2
+2 1 
+3 2
+num wire 3
+0 2 0
+2 1 0
+4 3 0
+num buffer 1
+1 4 0
