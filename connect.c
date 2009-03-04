@@ -36,6 +36,9 @@ int sink_num=0;         // number of sinks
 int g_size=0;           // total size of g(total nodes available)
 int g_num=0;            // number of nodes in g currently
 
+// mark if the graph has been constructed and shortest path has been calculated
+BOOL dirty=TRUE;        
+
 // stores the edges of blockages
 VSEG * vlist=NULL;	// vertical list
 HSEG * hlist=NULL;      // horizontal list
@@ -136,6 +139,7 @@ inline int hor_overlap(HSEG h1,HSEG h2){
 
 // construct the whole graph with a list of blockages and sinks
 void construct_g_all(BLOCKAGE * blocks, SINK * sink){
+	free_all();
 	// first construct the static part of graph(blockage corners)
 	pBlock = blocks;
 	block_num = blocks->num;
@@ -736,6 +740,7 @@ int insertpt(NODE pt,int id){
 		}
 	}
 	++g_num;
+	dirty=TRUE;
 	return pt_idx;
 }
 
@@ -754,6 +759,7 @@ BOOL removept(int pt_idx){
 		dirs[pt_idx][i] = dirs[i][pt_idx] = INVALID;
 	}
 	--g_num;
+	dirty=TRUE;
 	return TRUE;
 }
 
@@ -838,6 +844,7 @@ int all_pair_shortest(){
 	int i = floyd();
 	pairs=shortest_pair[i];
 	parents=backtrack_pair[i];
+	dirty=FALSE;
 	return i;
 }
 
@@ -931,6 +938,7 @@ void update_dist(BLOCKAGE * list, int src){
 		else 
 			parents[i][src] = disjoint_parent[i];
 	}
+	dirty=FALSE;
 }
 
 /*

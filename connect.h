@@ -31,6 +31,7 @@ int *mapping;
 UINT *shortest;
 int *via;
 BOOL *mark;
+BOOL dirty;
 DIRECTION **dirs;
 NODE *g_node;
 BOOL *use_corner;
