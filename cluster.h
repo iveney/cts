@@ -21,6 +21,7 @@ LINK_INFO* link_info;
 int link_num;
 
 void cluster_sinks(BLOCKAGE *blockage, SINK *sink);
+void preprocess_sinks(SINK * sink);
 void allocate_init_clusters(SINK *sink);
 void free_clusters(void);
 #endif

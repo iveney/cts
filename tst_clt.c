@@ -47,46 +47,17 @@ void draw_case(FILE * pFig){
 	draw_sinks(pFig);
 }
 
-void output_g_dirs(){
-	// check construct_g_all output
-	printf("\n---------------------------------------------------------\n");
-	outputg();
-	printf("\n---------------------------------------------------------\n");
-	output_dirs();
-}
-
-void output_dijkstra(){
-	// check dijkstra's output
-	int i;
-	printf("dijkstra output:\n");
-	for(i=0;i<g_size;i++) printf("%10d",shortest[i]);
-	printf("\n");
-	for(i=0;i<g_size;i++) printf("%10d",via[i]);
-	printf("\n");
-}
-
-
-void print_path(int which,int src_idx,int dst_idx){
-	int p=dst_idx;
-	while( p != src_idx ){
-		printf("%5d",p);
-		p=backtrack_pair[which][src_idx][p];
-	}
-	printf("\n");
-}
-
 void draw_link_sink(FILE * pFig){
 	int i;
-	//int cnt=0;
 	for(i=0;i<link_num;i++){
-		int p=i,q=-1;
 		printf("%d:\t",i);
+		int p=link_info[i].t,q=-1;
 		while( p != -1 ){
 			printf("%4d",p);
 			if( q != -1 ){
 				SNODE * s =&sink.pool[p];
 				SNODE * t =&sink.pool[q];
-				draw_line(pFig,
+				draw_wire(pFig,
 					s->x,s->y,
 					t->x,t->y,
 					SOLID,BLUE);
@@ -97,11 +68,11 @@ void draw_link_sink(FILE * pFig){
 		printf("\n");
 	}
 	/*
+	int cnt=0;
 	for(i=0;i<sink.num;i++){
 		if( isTail[i] ){
-			cnt++;
 			int p=i,q=-1;
-			printf("%d:\t",cnt);
+			printf("%d:\t",cnt++);
 			while( p != -1 ){
 				printf("%4d",p);
 				if( q != -1 ){
@@ -136,12 +107,16 @@ int main(int argc, char * argv[]){
 
 	// start to test
 	preprocess_block(&blockage);
+	preprocess_sinks(&sink);
 	construct_g_all(&blockage,&sink);
 	all_pair_shortest();
 
 	cluster_sinks(&blockage,&sink);
+
 	draw_case(pFig);
 	draw_link_sink(pFig);
+
+	free_clusters();
 	free_all();
 	return 0;
 }

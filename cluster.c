@@ -3,8 +3,15 @@
 // try to cluster some near sink nodes
 //
 // Author : Xiao Zigang
-// Modifed: < Wed Mar  4 10:33:31 HKT 2009 >
+// Modifed: < Thu Mar  5 14:42:55 HKT 2009 >
 // ----------------------------------------------------------------//
+// Useage: 
+// Use (preprocess_block) and (preprocess_sinks) first
+// and (construct_g_all)
+// then use (cluster_sink)s to generate polylines
+// Use (link_info[i]) to access the link, (link_num) is the total number
+// where (link_list) is the parent pointer (from tail to head)
+// At last should call (free_clusters) to free resources
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,14 +39,16 @@ void cluster_sinks(BLOCKAGE * blockage,SINK * sink){
 	int length = 0;
 	int cap = 0;
 	int num = 0;
-	BOOL * used = (int*) malloc(sink->num*sizeof(int));
+	BOOL * used = (int*) malloc(sink->num * sizeof(int));
+	memset(used,FALSE,sizeof(sink->num * sizeof(int)));
 	for(i=0;i<sink->num;i++){
 		// for each sink, try to form a poly line GREEDILY
 		// note that in g, sink node starts from static_num
 		if(used[i]) continue;
 		used[i]=TRUE;
 		head = tail = i; 
-		length = cap = 0;
+		length = 0;
+		cap = sink->pool[i].lc;
 		num=1;
 		do{
 			int min_dist = INFINITE;
@@ -58,6 +67,7 @@ void cluster_sinks(BLOCKAGE * blockage,SINK * sink){
 					which = 'h';
 				}
 			}
+
 			// find a nearest neighbour in tail side
 			for(j=0;j<sink_num;j++){
 				s=tail+static_num;
@@ -71,16 +81,20 @@ void cluster_sinks(BLOCKAGE * blockage,SINK * sink){
 			}
 
 			// check if adding the selected node violates
-			int new_len = length+min_dist;
-			int new_cap = cap + sink->pool[min_idx].lc;
-			int new_num = ++num;
-			if( new_len <= MAX_LEN && 
+			int new_len,new_cap;
+			if( min_idx != -1 ){
+				new_len	= length+min_dist;
+				new_cap = (cap + sink->pool[min_idx].lc);
+			}
+			if( min_idx != -1 &&
+			    new_len <= MAX_LEN && 
 			    new_cap <= MAX_CAP && 
-			    new_num <= MAX_SINK ){
+			    num +1  <= MAX_SINK ){
 				// update length cap num
 				length = new_len;
 				cap = new_cap;
-				num = new_num;
+				num++;
+				used[min_idx] = TRUE;
 			}
 			else{ // finish this polyline
 				link_info[link_num].l = length;
@@ -93,7 +107,6 @@ void cluster_sinks(BLOCKAGE * blockage,SINK * sink){
 			}
 
 			// now EXPAND(update head/tail and pointer)
-			used[min_idx] = TRUE;
 			switch( which ){
 			case 'h':
 				link_list[head] = min_idx;
@@ -136,4 +149,5 @@ void free_clusters(){
 	free(link_info);
 	link_list=NULL;
 	isHead=isTail=NULL;
+	link_info=NULL;
 }

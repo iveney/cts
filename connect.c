@@ -1065,6 +1065,22 @@ void preprocess_block(BLOCKAGE * pBlock){
     free(pBox);
     free(m);
 }
+
+
+int sort_sinks(const void * l, const void *r){
+	SNODE * pl = (SNODE*) l;
+	SNODE * pr = (SNODE*) r;
+	int c = (pl->x - pr->x);
+	if(c==0) return (pl->y - pr->y);
+	else return c;
+}
+
+// sort the sinks according to some heuristic
+void preprocess_sinks(SINK * sink){
+	qsort(sink->pool,sink->num,sizeof(SNODE),sort_sinks);
+}
+
+
 // output the matrix of graph
 void outputg(){
 	int i,j;

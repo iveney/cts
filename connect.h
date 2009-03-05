@@ -93,4 +93,6 @@ void destroy_segments(void);
 void free_all(void);
 void update_dist(BLOCKAGE *,int src);
 int zip_path(int);
+int sort_sinks(const void * l, const void *r);
+void preprocess_sinks(SINK * sink);
 #endif

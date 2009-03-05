@@ -1,5 +1,5 @@
 CC=/usr/bin/gcc 
-CFLAGS= -w 
+CFLAGS=-Wall -g 
 SRC=io.c segment.c dme.c main.c bufplace.c connect.c preprocess.c util.c
 OBJ=$(SRC:%.c=%.o)
 TSTOBJ=io.o bufplace.o connect.o util.o preprocess.o segment.o dme.o
@@ -20,7 +20,7 @@ test: $(TSTOBJ)
 	$(CC) -c $(CFLAGS) connect.c -DDEBUG
 	$(CC) -o $(DEBUG) $(CFLAGS) $(TSTOBJ) test.o -lm -DDEBUG 
 
-cluster:$(TSTOBJ) cluster.c
+cluster:$(TSTOBJ) cluster.c tst_clt.c
 	$(CC) -c $(CFLAGS) cluster.c
 	$(CC) -c $(CFLAGS) tst_clt.c
 	$(CC) -o $(CLUSTER) $(CFLAGS) $(TSTOBJ) tst_clt.o cluster.o -lm
