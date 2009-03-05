@@ -1,5 +1,6 @@
 #include "ds.h"
 #include "stdio.h"
+#include "stdlib.h"
 #include "connect.h"
 #include "bufplace.h"
 #include "segment.h"
@@ -95,7 +96,7 @@ void find_path(int min_i, int min_j, NODE *p, int * length){
 //   	printf("test direction: (%d %d),(%d %d), %d %d %d\n",p[len-1].x,p[len-1].y,p[len].x,p[len].y,p[len-1].dir_to ,p[len-1].dir_from,len);
 	len++;
 	*length = len;
-// 	printf("ffffff  %d\n",*length);
+ 	printf("length is  %d\n",*length);
 // 	printf("\n");
 
 //	return (int)shortest[g_size-1];
@@ -128,6 +129,8 @@ DME_NODE * init_dme_blockage_node(NODE p){
 	n->sx = n->lower = n->upper = n->x1 + n->y1;
 	n->sy = n->left = n->right = n->x1 - n->y1;
 	n->pright=NULL;
+	//printf("blockage node init. %d\n",blockage_count);
+	//exit(0);
 	n->node_id = blockage_count++;
 	return n;
 }
@@ -514,7 +517,11 @@ void merge(DME_NODE * n1, DME_NODE * n2, DME_NODE * parent, int distance, NODE *
 		b2 = (int)((distance + (n1->weight-n2->weight))/2);
 	}
 	
-	
+	if(n1->lower > n1->upper || n1->left > n1->right)
+                printf("n1:error %d %d %d %d %d\n",n1->node_id,n1->x1,n1->y1,n1->x2,n1->y2);
+        if(n2->lower > n2->upper || n2->left > n2->right)
+                printf("n2:error %d %d %d %d %d\n",n2->node_id,n2->x1,n2->y1,n2->x2,n2->y2);
+
 
 	if(b1<=0){
 		printf("Oh No b1!\n");
@@ -570,6 +577,11 @@ void merge(DME_NODE * n1, DME_NODE * n2, DME_NODE * parent, int distance, NODE *
 	int i,j,k;
 	int bb;
 	DME_NODE *head, *tail, *next;
+	if((p[0].x == n1->x1 && p[0].y == n1->y1) || (p[0].x == n1->x2 && p[0].y == n1->y2)){
+		head = n1;
+		tail = n2;
+	}
+	else{printf("dfsadf\n");exit(0);}	
 	head = n1;
 	tail = n2;
 	bb = b1;
@@ -603,16 +615,32 @@ void merge(DME_NODE * n1, DME_NODE * n2, DME_NODE * parent, int distance, NODE *
 	
 	parent->pright = next;
 	parent->right_direction = p[k].dir_to;
+	/*
+        int lower1 = p[k].x + p[k].y;
+        int left1 = p[k].x - p[k].y;
+        int lower2 = p[k+1].x + p[k+1].y;
+        int left2 = p[k+1].x - p[k+1].y;
+
+        parent->lower = MAX(lower1 - bb1, lower2 - bb2);
+        parent->upper = MIN(lower1 + bb1, lower2 + bb2);
+        parent->left = MAX(left1 - bb1, left2 - bb2);
+        parent->right = MIN(left1 + bb1, left2 + bb2);
+
+        parent->x1 = (parent->lower + parent->left)/2;
+        parent->y1 = (parent->lower - parent->left)/2;
+        parent->x2 = (parent->upper + parent->right)/2;
+        parent->y2 = (parent->upper - parent->right)/2;
+	*/
 	
-	parent->lower = MAX(n1->lower - b1, n2->lower - b2);
-	parent->upper = MIN(n1->upper + b1, n2->upper + b2);
-	parent->left = MAX(n1->left - b1, n2->left - b2);
-	parent->right = MIN(n1->right + b1, n2->right + b2);
+	parent->lower = MAX(parent->pleft->lower - bb1, parent->pright->lower - bb2);
+	parent->upper = MIN(parent->pleft->upper + bb1, parent->pright->upper + bb2);
+	parent->left = MAX(parent->pleft->left - bb1, parent->pright->left - bb2);
+	parent->right = MIN(parent->pleft->right + bb1, parent->pright->right + bb2);
 	parent->x1 = (parent->lower + parent->left)/2;
 	parent->y1 = (parent->lower - parent->left)/2;
 	parent->x2 = (parent->upper + parent->right)/2;
 	parent->y2 = (parent->upper - parent->right)/2;
-
+	
 	if(point_in_path(parent->x1, parent->y1, p[k],p[k+1]) == TRUE){
 		segment_merged(parent,TRUE);
 	}
@@ -637,8 +665,10 @@ void output_dme_node(FILE *fp, DME_NODE *n){
 	if(n->sink_index>0){
 		draw_point(fp , n->select_x, n->select_y, 0, BLUE);
 	}
-	else
+	else{
+		draw_wire(fp,n->x1,n->y1, n->x2, n->y2, 0, BLACK);
 		draw_point(fp , n->select_x, n->select_y, 0, RED);
+	}
 	double factor , upleft_x, upleft_y;
 	if (frame.ur.x != 0)
 		factor = (double)9500 / frame.ur.x;
@@ -724,8 +754,8 @@ void print_fig_1(DME_NODE * L, int length){
 	int i;
 	
 	output_dme_node(fp, &L[length-1]);
-	
-/*	for (i=0; i < (length); i++)
+/*	
+	for (i=0; i < (length); i++)
 	{
 		
 		upleft_x = L[i].select_x;
@@ -808,10 +838,14 @@ void connect_to_source(DME_NODE * n1, DME_NODE * parent){
 			min_i = i;
 		}
 	}
-	find_path(min_i, ret,&p, &length);
+	find_path(min_i,ret,p, &length);
+	for(i=0;i<length;i++){
+		printf("%d %d %d %d\n",p[i].x, p[i].y, p[i].dir_from, p[i].dir_to);
+	}
 // 	DME_NODE *head = n1;
 	DME_NODE *next = n1;
 	
+	printf("%d %d %d %d\n",n1->x1, n1->y1, n1->x2, n1->y2);
 	for(i=1;i<length-1;i++){
 		DME_NODE *n = init_dme_blockage_node(p[i]);
 		n->left_direction = p[i].dir_to;
@@ -846,7 +880,7 @@ void connect_to_source(DME_NODE * n1, DME_NODE * parent){
 	else
 		n1->factor = 1;
 	//n1->factor = 1.0f * (k-2) / (k);
-	n1->duplicate_first_buf = 0;
+	n1->duplicate_first_buf = 1;
 	n1->buf_num = k;
 	n1->reduntant = 0;
 //	n1->factor = 1.0f;
@@ -885,6 +919,104 @@ void coordinate_translate(DME_NODE * n){
 	coordinate_translate(n->pright);
 }
 
+void free_tree_node(DME_TREE_NODE * OT){
+	if ( OT == NULL)
+		return ;
+	free_tree_node(OT->ls);
+	free_tree_node(OT->rs);
+	free(OT);
+
+}
+
+void free_buf(BUF_NODE ** OBUF){
+	int i = 0 ;
+	BUF_NODE * b1, * b2; 	
+	for ( i = 0 ; i < free_buf_num; i++){
+		b1 = (*(OBUF+i)) ;
+		while(b1 != NULL){
+			b2 = b1->next;
+			free(b1);
+			b1 = b2;
+		}
+
+	}
+	free(OBUF);
+}
+
+
+void eleminate(BUF_NODE ** OBUF, DME_TREE_NODE * OT, DME_TREE_NODE ** OTmap){
+	free_tree_node(OT);
+	free(OTmap);
+	free_buf(OBUF);
+
+}
+
+void subtree_call_ngspice(DME_NODE *n, double *ltree, double *rtree){
+	FILE * tfp , * ifp; 
+	BUF_NODE ** OBUF;
+	DME_TREE_NODE * lt, * rt ;
+	DME_TREE_NODE * OT;
+	DME_TREE_NODE ** OTmap ; 	
+	CUSINK * sink_alt_array ;
+	int i,j;
+	tfp = fopen("outfile","w");
+	ifp = fopen("infile","w");
+// 	printf(" call ngspice \n");
+	mid_sink_num = 0;
+	insert_buffer(n,&OBUF,&OT,&OTmap);
+	gen_inputfile(ifp,OT,OTmap);
+	output_file(tfp,OBUF,OT,OTmap);
+	fclose(tfp);
+	fclose(ifp);	
+	sink_alt_array = (CUSINK *) malloc(sizeof(CUSINK)*(mid_sink_num));
+	if (mid_sink_num == 0 || sink_alt_array == NULL){
+		printf("no sink alt array\n");
+		exit(0);
+	}
+	sink_array_num = 0;
+	construct_SINK_array(OT,sink_alt_array,mid_sink_num);
+	preprocess(1,sink_alt_array,mid_sink_num);
+	lt = OT->ls->ls;
+	rt = OT->ls->rs;
+	if ( lt == NULL || rt == NULL){
+		printf(" wrong test node left or right son is NULL\n");
+		exit(0);
+	}
+// 	printf(" ***********%d %d %d %d*************\n", lt->left,lt->right,rt->left,rt->right);
+	(*ltree) = (*rtree) = 0.0;
+	for ( i = lt->left ; i <= lt->right ; i++){
+		for ( j= 0 ; j<4; j++)
+			(*ltree) += sink_alt_array[i].latency[j] ;
+	}
+	(*ltree) /= 4*(lt->right+1) ;
+	for ( i = rt->left ; i <= rt->right ; i++){
+		for ( j= 0 ; j<4; j++)
+			(*rtree) += sink_alt_array[i].latency[j] ;
+	}
+	(*rtree) /=4* (rt->right-rt->left + 1) ;
+
+// 	printf(" ***********%f     %f*************\n",*ltree,*rtree);
+	
+
+// 	for ( i = 0 ; i < mid_sink_num ; i++){
+// 		printf(" %d %d \t",sink_alt_array[i].node_id,sink_alt_array[i].sink_index);
+// 		for ( j = 0 ; j < 4 ; j++)
+// 			printf("%f ",sink_alt_array[i].latency[j]);
+// 		printf("\n");		
+// 	}
+	
+//	sleep(2);
+	eleminate(OBUF,OT,OTmap);
+	free(sink_alt_array);
+	OBUF = NULL;
+	OT = NULL;
+	OTmap = NULL;
+//	exit(0);
+
+
+}
+
+
 BOOL ngspice_test(DME_NODE * n, double *delta_delay){
 double ltree,rtree;
 BUF_NODE ** OBUF;
@@ -906,101 +1038,6 @@ DME_TREE_NODE ** OTmap ;
 		return TRUE;
 
 	return FALSE;
-}
-void free_tree_node(DME_TREE_NODE * OT){
-	if ( OT == NULL)
-		return ;
-	free_tree_node(OT->ls);
-	free_tree_node(OT->rs);
-	free(OT);
-
-}
-
-void free_buf(BUF_NODE ** OBUF){
-int i = 0 ;
-BUF_NODE * b1, * b2; 	
-	for ( i = 0 ; i < free_buf_num; i++){
-		b1 = (*(OBUF+i)) ;
-		while(b1 != NULL){
-			b2 = b1->next;
-			free(b1);
-			b1 = b2;
-		}
-
-	}
-	free(OBUF);
-}
-
-void eleminate(BUF_NODE ** OBUF, DME_TREE_NODE * OT, DME_TREE_NODE ** OTmap){
-	free_tree_node(OT);
-	free(OTmap);
-	free_buf(OBUF);
-
-}
-
-void subtree_call_ngspice(DME_NODE *n, double *ltree, double *rtree){
-FILE * tfp , * ifp; 
-BUF_NODE ** OBUF;
-DME_TREE_NODE * lt, * rt ;
-DME_TREE_NODE * OT;
-DME_TREE_NODE ** OTmap ; 	
-CUSINK * sink_alt_array ;
-int i,j;
-	tfp = fopen("outfile","w");
-	ifp = fopen("infile","w");
-// 	printf(" call ngspice \n");
-	mid_sink_num = 0;
-	insert_buffer(n,&OBUF,&OT,&OTmap);
-	gen_inputfile(ifp,OT,OTmap);
- 	output_file(tfp,OBUF,OT,OTmap);
-	fclose(tfp);
-	fclose(ifp);	
- 	sink_alt_array = (CUSINK *) malloc(sizeof(CUSINK)*(mid_sink_num));
-	if (mid_sink_num == 0 || sink_alt_array == NULL){
-		printf("no sink alt array\n");
-		exit(0);
-	}
-	sink_array_num = 0;
-	construct_SINK_array(OT,sink_alt_array,mid_sink_num);
-	preprocess(1,sink_alt_array,mid_sink_num);
-	lt = OT->ls->ls;
-	rt = OT->ls->rs;
-	if ( lt == NULL || rt == NULL){
-		printf(" wrong test node left or right son is NULL\n");
-		exit(0);
-	}
-// 	printf(" ***********%d %d %d %d*************\n", lt->left,lt->right,rt->left,rt->right);
-	(*ltree) = (*rtree) = 0.0;
-	for ( i = lt->left ; i <= lt->right ; i++){
-		for ( j= 0 ; j<4; j++)
-			(*ltree) += sink_alt_array[i].latency[j] ;
-	}
-	(*ltree) /= 4*(lt->right+1) ;
-        for ( i = rt->left ; i <= rt->right ; i++){
-                for ( j= 0 ; j<4; j++)
-                        (*rtree) += sink_alt_array[i].latency[j] ;
-        }
-        (*rtree) /=4* (rt->right-rt->left + 1) ;
-
-// 	printf(" ***********%f     %f*************\n",*ltree,*rtree);
-	
-
-// 	for ( i = 0 ; i < mid_sink_num ; i++){
-// 		printf(" %d %d \t",sink_alt_array[i].node_id,sink_alt_array[i].sink_index);
-// 		for ( j = 0 ; j < 4 ; j++)
-// 			printf("%f ",sink_alt_array[i].latency[j]);
-// 		printf("\n");		
-// 	}
-	
-//	sleep(2);
-	eleminate(OBUF,OT,OTmap);
- 	free(sink_alt_array);
-	OBUF = NULL;
-	OT = NULL;
-	OTmap = NULL;
-//	exit(0);
-
-
 }
 
 
@@ -1074,7 +1111,7 @@ void dme_core(DME_NODE * L, int length){
 			min_j = temp;
 		}
 //  		printf("%d %d\n",L_min_i, L_min_j);
-		find_path(min_i, min_j, &min_p, &min_len);
+		find_path(min_i, min_j, min_p, &min_len);
 //		int kk=length,k_total=0,prev=0;
 //		for(c_k=0;c_k<=current_level;c_k++){
 //			int tmp= (kk+prev)/2;
@@ -1098,14 +1135,14 @@ void dme_core(DME_NODE * L, int length){
 				min_delay = delta_delay;
 				min_before = delta_before-delta_delay;
 			}
-			merge(&L[L_min_j],&L[L_min_i],&L[length+count],min_dis,&min_p,min_len, delta_before);
+			merge(&L[L_min_j],&L[L_min_i],&L[length+count],min_dis,min_p,min_len, delta_before);
 			if(kkkk++!=0)
 				printf("%d: %f %f\n",kkkk, delta_before,delta_delay);
 		}
 		while(ngspice_test(&L[length+count],&delta_delay) == TRUE);
 //			merge(&L[L_min_j],&L[L_min_i],&L[length+count],min_dis,&min_p,min_len, delta_before);
 		if(kkkk == BIG_NUM+1){
-			merge(&L[L_min_j],&L[L_min_i],&L[length+count],min_dis,&min_p,min_len, min_before);
+			merge(&L[L_min_j],&L[L_min_i],&L[length+count],min_dis,min_p,min_len, min_before);
 		}
 
 		L[length+count].node_id = length+count;
@@ -1133,7 +1170,7 @@ void dme_core(DME_NODE * L, int length){
 		q1 = insertpt(tmp, length+count);
 		update_dist(&blockage,q1);
 //		L[length+count].level = MAX(L[L_min_i].level, L[L_min_j].level)+1;
-// 		printf("%d %d %d %d %d\n",count, L_min_i,L_min_j,min_dis,min_len);
+ 		printf("%d %d %d %d %d\n",count, L_min_i,L_min_j,min_dis,min_len);
 		count++;
 // 		printf("\n");
 	}
@@ -1158,7 +1195,7 @@ void buf_count(DME_NODE * n, int p_num){
 /*	if(n->sink_index != -1)
 		printf("sink %d buffer number is %d\n", n->sink_index, n->upstream_buf_num);*/
 }
-DME_NODE* deferred_merge_embedding(){
+void deferred_merge_embedding(){
 	int i;
 
 	DME_NODE * L = (DME_NODE *) malloc (sizeof(DME_NODE) * (2*sink.num));
@@ -1196,9 +1233,9 @@ DME_NODE* deferred_merge_embedding(){
 	dme_core(L, length);
 	buf_count(&L[length*2-2],0);
 //	check_DME(&L[2*length-2]);
-//	print_fig_1(L,length*2-1);
+	print_fig_1(L,length*2-1);
 	free_all();
 
-	return L;
+//	return L;
 
 }
