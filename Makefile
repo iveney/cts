@@ -2,7 +2,7 @@ CC=/usr/bin/gcc
 CFLAGS=-Wall -g 
 SRC=io.c segment.c dme.c main.c bufplace.c connect.c preprocess.c util.c fast_path.c crt_path.c heap.c
 OBJ=$(SRC:%.c=%.o)
-TSTOBJ=io.o bufplace.o connect.o util.o preprocess.o segment.o dme.o
+TSTOBJ=io.o bufplace.o connect.o util.o preprocess.o segment.o dme.o 
 CTS=cts
 TEST=test
 DEBUG=debug

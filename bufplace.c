@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include "ds.h"
+//#include "main.h"
 #include "connect.h"
 #include "bufplace.h"
 
@@ -54,8 +55,6 @@ BUF_POS * FIFO2 ;
 static int Findex1 = 0 ;
 static int Findex2 = 0 ;
 BUF_NODE ** bufnode;
-
-
 
 void add_DME_node(DME_NODE *l , DME_TREE_NODE ** Troot, int x, int y, DME_TREE_NODE *father){
 int i, j ,n ;
@@ -1661,6 +1660,36 @@ int altitude1, altitude2,delta;
 }
 
 
+void draw_rectangle(FILE *fp, double x1, double y1, double x2, double y2, int dash, int colour){
+double factor , upleft_x, upleft_y,downright_x,downright_y,upright_x,upright_y,downleft_x,downleft_y;
+double mid_x , mid_y ; 
+		if (frame.ur.x != 0)
+			factor = (double)9500.0 / frame.ur.x;
+		if (factor > 9500.0 / frame.ur.y)
+			factor = (double)9500.0 / frame.ur.y; 
+		upleft_x = x1*factor + OFFSET;
+		upleft_y = y1*factor + OFFSET;
+		downright_x = x2 * factor + OFFSET; 
+		downright_y = y2 * factor + OFFSET;
+
+		upright_x = downright_x;
+		upright_y = upleft_y;
+		downleft_x = upleft_x;
+		downleft_y = downright_y;
+
+		fprintf(fp,"2 2 %d 1 32 32 50 -1 20 0.000 0 0 -1 0 0 5\n", dash);//,colour,colour);
+		fprintf(fp,"\t%.0f %.0f %.0f %.0f %.0f %.0f %.0f %.0f %.0f %.0f\n",upleft_x,upleft_y,upright_x,upright_y,
+				downright_x,downright_y,downleft_x,downleft_y,upleft_x,upleft_y);
+		/*
+		   mid_x = downright_x;
+		   mid_y = upleft_y;
+		   fprintf(fp,"2 1 %d 1 %d 7 50 -1 -1 0 0 0 -1 0 0 2\n", dash,colour);
+		   fprintf(fp,"\t%.0f %.0f %.0f %.0f\n",upleft_x,upleft_y,mid_x,mid_y);	
+		   fprintf(fp,"2 1 %d 1 %d 7 50 -1 -1 0 0 0 -1 0 0 2\n", dash,colour);
+		   fprintf(fp,"\t%.0f %.0f %.0f %.0f\n",mid_x,mid_y,downright_x,downright_y);				
+		   */
+}
+
 extern int free_buf_num ;
 extern int mid_sink_num ;
 void insert_buffer(DME_NODE * L  , BUF_NODE *** OBUF, DME_TREE_NODE ** OT , DME_TREE_NODE *** OTmap){
@@ -1779,7 +1808,6 @@ DME_TREE_NODE *look;
 
 }
 
-
 void draw_rect(FILE *fp,double llx,double lly,double urx,double ury,int dash,int color){
 	draw_wire(fp,llx,lly,urx,lly,dash,color);
 	draw_wire(fp,llx,ury,urx,ury,dash,color);
@@ -1794,14 +1822,22 @@ void draw_block(FILE *fp,BOX b,int dash,int color){
 
 void draw_blockages(FILE * fp){
 	int i;
-	for(i=0;i<blockage.num;i++)
+	for(i=0;i<blockage.num;i++){
+		BOX p=blockage.pool[i];
+		draw_rectangle(fp,(double)p.ll.x,
+				(double)p.ll.y,
+				(double)p.ur.x,
+				(double)p.ur.y,SOLID,BLACK);
 		draw_block(fp,blockage.pool[i],SOLID,BLACK);
+	}
 }
 
 void draw_sinks(FILE * fp){
 	int i;
-	for(i=0;i<sink.num;i++)
+	for(i=0;i<sink.num;i++){
+		draw_coord(fp,(double)sink.pool[i].x,(double)sink.pool[i].y,i,0);
 		draw_point(fp,(double)sink.pool[i].x,(double)sink.pool[i].y,SOLID,RED);
+	}
 }
 
 void draw_wire_node(FILE *fp,NODE s,NODE t,int dash, int color){
@@ -1810,19 +1846,19 @@ void draw_wire_node(FILE *fp,NODE s,NODE t,int dash, int color){
 }
 
 void draw_line(FILE *fp, double x1, double y1, double x2, double y2, int dash, int colour){
-	double factor , upleft_x, upleft_y,downright_x,downright_y;
+	double factor , upleft_x, upleft_y,downright_x,downright_y; 	
 
 	if (frame.ur.x != 0)
 		factor = (double)9500 / frame.ur.x;
 	if (factor > 9500 / frame.ur.y)
-		factor = (double)9500 / frame.ur.y;
+		factor = (double)9500 / frame.ur.y; 
 	upleft_x = x1*factor + OFFSET;
 	upleft_y = y1*factor + OFFSET;
-	downright_x = x2 * factor + OFFSET;
+	downright_x = x2 * factor + OFFSET; 
 	downright_y = y2*factor + OFFSET;
 
 	fprintf(fp,"2 1 %d 1 %d 7 50 -1 -1 0 0 0 -1 0 0 2\n", dash,colour);
-	fprintf(fp,"\t%.0f %.0f %.0f %.0f\n",upleft_x,upleft_y,downright_x,downright_y);
+	fprintf(fp,"\t%.0f %.0f %.0f %.0f\n",upleft_x,upleft_y,downright_x,downright_y);	
 }
 
 void draw_line_node(FILE *fp,NODE s,NODE t, int dash, int color){
@@ -1830,27 +1866,30 @@ void draw_line_node(FILE *fp,NODE s,NODE t, int dash, int color){
 			dash,color);
 }
 
-// testing function: draw the shortest path tree( may not be rectlinear)
-void draw_single_source_tree(FILE * pFig,int src_idx){
+// draw the shortest path tree
+// REQUIRE : the dijkstra has been called!
+// pFig    : the FILE object to write to
+// src_idx : the source point
+void draw_single_source_tree(FILE * pFig,int * back,int src_idx){
 	int i;
 	for(i=0;i<g_size;i++){
-		if( g_occupy[i] == TRUE && i != src_idx )
-			draw_line_node(pFig,g_node[i],g_node[via[i]],SOLID,BLUE);
+		if( g_occupy[i] == TRUE && i != src_idx && back[i] != -1 )
+			draw_line_node(pFig,g_node[i],g_node[back[i]],SOLID,BLUE);
 	}
 }
 
-// testing function: draw the rectilinear shortest path we found
+// draw the rectilinear shortest path we found
+// REQUIRE : the dijkstra has been called!
 // pFig    : the FILE object to write to
 // src_idx : the source point
-// s,t     : the last two node
-void draw_single_source_rectilinear(FILE * pFig,int src_idx){
+void draw_single_source_rectilinear(FILE * pFig,int * back,int src_idx){
 	int i;
 	for(i=0;i<g_size;i++){
-		if( g_occupy[i] == TRUE && i != src_idx ){
-			int j=via[i];
+		if( g_occupy[i] == TRUE && i != src_idx && back[i] != -1){
+			int j=back[i]; // generate the meeting point first
 			NODE temp;
-			if( dirs[i][j] == UP ||
-			    dirs[i][j] == DOWN ){
+			if( dirs[i][j] == UP ||	
+			    dirs[i][j] == DOWN ){// backtrace the nodes
 				temp.x = g_node[i].x;
 				temp.y = g_node[j].y;
 			}
@@ -1864,7 +1903,5 @@ void draw_single_source_rectilinear(FILE * pFig,int src_idx){
 		}
 	}
 }
-
-
 
 

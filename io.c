@@ -1,12 +1,12 @@
-#include "ds.h"
-#include "bufplace.h"
 #include<stdio.h>
 #include<stdlib.h>
 #include<math.h>
 #include<string.h>
+#include "ds.h"
+#include "bufplace.h"
+//#include "main.h"
 
 // okay 1, fault 0
-
 
 extern BOX frame	;
 extern SOURCE source  ;
@@ -18,7 +18,6 @@ extern int SlewLimit;
 extern int CapLimit ;
 extern BLOCKAGE blockage;
 
-
 extern double cap_left;
 extern int num_node ;
 extern int num_buffer;
@@ -29,6 +28,7 @@ extern int highway_extra_buf ;
 extern int * sink_alt_array;
 extern int mid_sink_num;
 extern int total_buf_num;
+
 int InputFile(FILE *ifp){
 
 char buf[SMALL_BUF_SIZE] ;

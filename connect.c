@@ -993,8 +993,11 @@ void dijkstra(BLOCKAGE * list,int src_idx){
 				index = j;
 			}
 		}
-		if( index == -1 ) // the graph is not connected?
+		if( index == -1 ){ // the graph is not connected?
+			return;
+		//	printf("%d %d",g_node[src_idx].x,g_node[src_idx].y);
 			report_exit("Cannot find node to connect in dijkstra");
+		}
 
 		// now add this point 
 		mark[index] = TRUE;

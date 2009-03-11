@@ -16,7 +16,7 @@ do
 	echo "" > $filename
 	echo "#ifndef $HEADER" > "$filename".temp
 	echo "#define $HEADER" >> "$filename".temp
-	cproto -l $i >> "$filename".temp
+	cproto $i >> "$filename".temp
 	echo "#endif " >> "$filename".temp
 	mv "$filename".temp $filename
 done

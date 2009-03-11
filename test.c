@@ -5,23 +5,7 @@
 #include "ds.h"
 #include "connect.h"
 #include "bufplace.h"
-#include "io.h"
-
-BOX frame	; 
-SOURCE source  ;
-SINK sink	; 
-WIRELIB wirelib;
-BUFLIB	buflib ; 
-VDDLIB	vddlib ; 
-int SlewLimit; 
-int CapLimit ; 
-BLOCKAGE blockage;
-
-int num_node ; 
-int num_buffer; 
-int num_wire ; 
-int num_sinknode ; 
-int num_total_nodes ; 
+#include "main.h"
 
 void init_draw(FILE *pFig){
 	fprintf(pFig,"#FIG 3.1\n");
@@ -83,7 +67,7 @@ int main(int argc, char * argv[]){
 
 	// start to test
 	preprocess_block(&blockage);
-	construct_g_all(&blockage,&sink);
+	construct_g_all(&blockage,&frame,&sink);
 
 	printf("H:\n");
 	for(i=0;i<hfbd_size;i++)
@@ -119,6 +103,7 @@ int main(int argc, char * argv[]){
 
 	// write results into file
 	for(i=static_num;i<g_size;i++){
+		if( !g_occupy[i] ) continue;
 		printf("node index = %d\n",i);
 		sprintf(buf,"tree_%d.fig",i-static_num);
 		printf("Writing %s...\n",buf);
