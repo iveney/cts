@@ -1268,7 +1268,7 @@ DME_TREE_NODE ** OTmap ;
 	*delta_delay =  ltree - rtree;
 // 	printf("%f %f %f\n", ltree, rtree, *delta_delay);
 	// insert_buf(n);
-	if(flag == TRUE && ABS(*delta_delay) > 0.05)
+	if(flag == TRUE && ABS(*delta_delay) > 0.1)
 		return TRUE;
 //	n->to_sink_delay = (ltree + rtree)/2;
  	printf("%f %f %f\n", ltree, rtree, *delta_delay);

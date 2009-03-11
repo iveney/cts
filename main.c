@@ -72,6 +72,8 @@ int main(int argc, char **argv){
 	int i;
 	deferred_merge_embedding(FALSE);
  	insert_buffer(source_node, &OBUF, &OT, &OTmap) ;
+
+	/*
 	trans_crt_path(OBUF,OT,OTmap );
 	printf("total buf num is %d\n",total_buf_num);
 	refine_crt_num(&crt_num_node,&crt_num_wire,&crt_total_buf_num,OBUF);
@@ -113,7 +115,7 @@ int main(int argc, char **argv){
 
 	son->ls = Store->ls;
 	son->rs = Store->rs;
-
+	*/
 //	num_node += crt_num_node;
 //	num_wire += crt_num_wire;
 //	total_buf_num += crt_total_buf_num;
