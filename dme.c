@@ -1231,6 +1231,7 @@ DME_TREE_NODE ** OTmap ;
 	source_node->pright = NULL;
 	n->duplicate_first_buf = 0;
 	n->buf_num = 0;
+	n->wire_type= 0;
 	n->reduntant = 0;
 	n->is_select = FALSE;
 	n->detour = 0;
@@ -1267,7 +1268,7 @@ DME_TREE_NODE ** OTmap ;
 	*delta_delay =  ltree - rtree;
 // 	printf("%f %f %f\n", ltree, rtree, *delta_delay);
 	// insert_buf(n);
-	if(flag == TRUE && ABS(*delta_delay) > 0.1)
+	if(flag == TRUE && ABS(*delta_delay) > 0.05)
 		return TRUE;
 //	n->to_sink_delay = (ltree + rtree)/2;
  	printf("%f %f %f\n", ltree, rtree, *delta_delay);

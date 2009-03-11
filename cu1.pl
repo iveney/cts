@@ -516,6 +516,8 @@ for $j (1 .. ($#wireFromArr )) {
 
 print OUTFILE "x0 gin n0 vdd inv\n";
 print OUTFILE "x1 gin n0 vdd inv\n";
+print OUTFILE "x___1 gin n0 vdd inv\n";
+print OUTFILE "x___0 gin n0 vdd inv\n";
 
 for $i (0 .. ($#bufFromArr )) {
     $bufCount++;
@@ -549,7 +551,7 @@ for $i (0 .. ($#nodeIdArr )) {
 
 print OUTFILE "*
 vdd vdd 0 $vdd
-vdt gin 0 $vdd pwl(0n $sourceInitVolt, 0.2n $sourceInitVolt, 0.325n $sourceEndVolt, 2n $sourceEndVolt)
+vdt gin 0 $vdd pwl(0n $sourceInitVolt, 0.2n $sourceInitVolt, 0.201n $sourceEndVolt, 2n $sourceEndVolt)
 *
 .ic v(gin)=$sourceInitVolt
 ";

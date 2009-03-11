@@ -12,7 +12,7 @@
 #define SMALL_BUF_SIZE 100
 #define LARGE_BUF_SIZE 1000
 #define ELMORE 1
-#define BIG_NUM 10
+#define BIG_NUM 20
 #define EPSILON 1E-9   // double type precision
 #define OFFSET 100
 #define LAMBADA_w1 1400001
