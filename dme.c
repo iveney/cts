@@ -1079,24 +1079,13 @@ void dme_core(DME_NODE * L, int length){
 					continue;
 				if(mapping[i] == mapping[j])
 					continue;
-// 				printf("%d %d %d %d %d\n", i,j,L[i].level,L[j].level,current_level);
-//				if(L[i].level>current_level || L[j].level>current_level)
-//					continue;
 
-//				dis = cal_distance(&L[i],&L[j],1, &p,&len);
 				dis = pairs[i][j];
-//				cost = dis/100 + 10000*ABS(L[i].to_sink_delay - L[j].to_sink_delay) + 500*ABS(L[i].capacitance - L[j].capacitance);
-				//dis =test_distance(&L[i],&L[j]);
 				if(min_dis>dis){
 
-//				if(min_cost>cost){
-//					min_cost = cost;
 					min_dis = dis;
 					min_i = i;
 					min_j = j;
-//					min_len = len;
-//					for(i2=0;i2<len;i2++)
-//						min_p[i2] = p[i2];
 				}
 			}
 			
@@ -1110,19 +1099,7 @@ void dme_core(DME_NODE * L, int length){
 			min_i = min_j;
 			min_j = temp;
 		}
-//  		printf("%d %d\n",L_min_i, L_min_j);
 		find_path(min_i, min_j, min_p, &min_len);
-//		int kk=length,k_total=0,prev=0;
-//		for(c_k=0;c_k<=current_level;c_k++){
-//			int tmp= (kk+prev)/2;
-//			prev = (kk+prev)%2;
-//			kk = tmp;
-//			k_total += tmp;
-//		}
-//		if((k_total-1)<=count)
-//			current_level++;
-// 		printf("x  %d %d %d\n",k_total,current_level,count);
-//		L[length+count].node_id = length+count;
 		
 		double delta_delay = 0,delta_before = 0, delay_prev = 10, min_delay=999,min_before;
 		int kkkk=0;
@@ -1140,7 +1117,6 @@ void dme_core(DME_NODE * L, int length){
 				printf("%d: %f %f\n",kkkk, delta_before,delta_delay);
 		}
 		while(ngspice_test(&L[length+count],&delta_delay) == TRUE);
-//			merge(&L[L_min_j],&L[L_min_i],&L[length+count],min_dis,&min_p,min_len, delta_before);
 		if(kkkk == BIG_NUM+1){
 			merge(&L[L_min_j],&L[L_min_i],&L[length+count],min_dis,min_p,min_len, min_before);
 		}
@@ -1169,17 +1145,10 @@ void dme_core(DME_NODE * L, int length){
 		tmp.y = L[length+count].y2;
 		q1 = insertpt(tmp, length+count);
 		update_dist(&blockage,q1);
-//		L[length+count].level = MAX(L[L_min_i].level, L[L_min_j].level)+1;
  		printf("%d %d %d %d %d\n",count, L_min_i,L_min_j,min_dis,min_len);
 		count++;
-// 		printf("\n");
 	}
 	connect_to_source(&L[2*length-2],source_node);
-/*	for(i=0;i<2*length-1;i++){
-		printf("%d %.0f %.0f %.0f %.0f\n",L[i].node_id,L[i].lower,L[i].left, L[i].upper,L[i].right);
-		printf("%d %.0f %.0f %.0f %.0f\n",L[i].node_id,L[i].x1,L[i].y1, L[i].x2,L[i].y2);
-	}*/
-// 	trace_back(&L[2*length-2], source_node);
 	trace_back(source_node,NULL);
 
 	coordinate_translate(source_node);

@@ -58,20 +58,15 @@ void cluster_sinks(BLOCKAGE * blockage,SINK * sink){
 
 			// find a nearest neighbour in head side
 			for(j=0;j<sink_num;j++){
-				s=head+static_num;
 				t=j+static_num;
+				s=head+static_num;
 				if( !used[j] && head!=j && 
 				     pairs[s][t] < min_dist ){
 					min_dist = pairs[s][t];
 					min_idx = j;
 					which = 'h';
 				}
-			}
-
-			// find a nearest neighbour in tail side
-			for(j=0;j<sink_num;j++){
 				s=tail+static_num;
-				t=j+static_num;
 				if( !used[j] && tail!=j && 
 				     pairs[s][t] < min_dist ) {
 					min_dist = pairs[s][t];
