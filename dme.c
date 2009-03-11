@@ -1660,7 +1660,7 @@ void deferred_merge_embedding(){
 	DME_NODE * L = (DME_NODE *) malloc (sizeof(DME_NODE) * (2*sink.num));
 
 	//constructg(&blockage);
-	construct_g_all(&blockage,&sink);
+	construct_g_all(&blockage,&frame,&sink);
 	int which = all_pair_shortest();
 
 	int length = sink.num;
