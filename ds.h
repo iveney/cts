@@ -13,11 +13,11 @@
 #define LARGE_BUF_SIZE 1000
 #define ELMORE 1
 #define BIG_NUM 10
+#define EPSILON 1E-9   // double type precision
 #define OFFSET 100
-#define HIGHWAY 4
-#define LAMBADA 1400001
-#define LAMBADA2 1400001
-#define LAMBADA3 1000001
+#define LAMBADA_w1 1400001
+#define LAMBADA_w2 700001
+#define LARGESTNODE 9999
 //#define LAMBADA 200000.00
 //
 typedef unsigned long UINT;
@@ -36,22 +36,22 @@ typedef struct inode{
 	int y ;
 	DIRECTION dir_to;
 	DIRECTION dir_from;
-}NODE ; 
+}NODE ;
 
 typedef struct isnode{
-	int index ; 
-	int x; 
-	int y; 
-	int lc; 
-}SNODE; 
+	int index ;
+	int x;
+	int y;
+	int lc;
+}SNODE;
 
 typedef struct ibox{
 	NODE ll;
-	NODE ur; 
+	NODE ur;
 } BOX;
 
 typedef struct isource{
-	int name ; 
+	int name ;
 	NODE location;
 	int bufname ;
 
@@ -61,44 +61,44 @@ typedef struct iwire{
 	int wiretype ;
 	double r;
 	double c;
-} WIRE; 
+} WIRE;
 
 typedef struct ibuffer{
-	int buf_id; 
-	char *spice_subckt ; 
-	int inverted; 
+	int buf_id;
+	char *spice_subckt ;
+	int inverted;
 	double icap ;
-	double ocap ; 
+	double ocap ;
 	double ores ;
-} BUFFER; 
+} BUFFER;
 
 typedef struct isink{
-	int num; 
-	SNODE *pool ;	
+	int num;
+	SNODE *pool ;
 
-}SINK ; 
+}SINK ;
 
 typedef struct iwirelib{
 	int num;
-	WIRE *lib; 
+	WIRE *lib;
 
-}WIRELIB ; 
+}WIRELIB ;
 
 typedef struct ibuflib{
 	int num;
 	BUFFER *lib;
-}BUFLIB ; 
+}BUFLIB ;
 
 typedef struct ivddlib{
 	int num;
-	double *lib; 
-}VDDLIB ; 
+	double *lib;
+}VDDLIB ;
 
 
 
 typedef struct iblockage{
 	int num;
-	BOX *pool; 
+	BOX *pool;
 } BLOCKAGE ;
 
 
@@ -108,31 +108,38 @@ typedef struct dme_node{
 	int upper;
 	int lower;
 	int x1;
-	int y1; 
+	int y1;
 	int x2;
 	int y2;
 	double weight;
 	double capacitance;
 	double resistance;
-	double cap1;
-	double cap2;
+	double left_length;
+	double right_length;
 	double to_sink_delay;
+	double downstream_length;
+	double first_buf_fraction;
 	int delta_length_buf;
 	int select_x;
 	int select_y;
 	int sx;
 	int sy;
 	int visited;
+	BOOL is_select;
 	int blockage_node;
 	int sink_index;
 	int node_id;
 	int buf_num;
+	int buf_unit;
 	int level;
+	int tree_level;
 	int duplicate_first_buf;
 	int downstream_buf_num;
+	int downstream_total_buf_num;
 	int upstream_buf_num;
 	int reduntant;
 	int detour;
+	int wire_type;
 	double factor;
 	struct dme_node * pleft;
 	DIRECTION left_direction;
@@ -147,44 +154,49 @@ typedef struct buf_node{
 	double x;
 	double y;
 	int buf_id;
+	int wire_type;
+	int buf_type;
+	int units;
 //	int buf_lev;
-	struct buf_node * next ; 
+	struct buf_node * next ;
 }BUF_NODE ;
 
 typedef struct dme_tree_node{
-	
+
 	struct dme_tree_node * ls;
-	DIRECTION left_direction;	
+	DIRECTION left_direction;
 	struct dme_tree_node * rs;
 	DIRECTION right_direction;
-	struct dme_tree_node * fa ; 
+	struct dme_tree_node * fa ;
 	int 	   buf_num ;
-	int 	   delta_length_buf ; 
+//	int 	   delta_length_buf ;
 	double 	   factor ;
 	double 	   delay;
         int        is_fake ;
-	int	   duplicate_first_buf;	
+	int	   duplicate_first_buf;
 	int  	   altitude;
-	int  	   x; 
-	int  	   y; 
+	int  	   x;
+	int  	   y;
 	int	   left;
-	int	   right; 
-	int 	   node_id; 
-	int 	   is_sink ; 
-	int 	   sink_index ; 
+	int	   right;
+	int 	   node_id;
+	int 	   is_sink ;
+	int 	   sink_index ;
 	int	   is_blk ;
-	int	   reduntant ; 
-        int        detour ;
+	int	   reduntant ;
+    int        detour ;
+	int    wire_type;
+	double first_buf_fraction;
 	double	   capacitance;
 }DME_TREE_NODE;
 
 typedef struct tem_node{
-	int altitude ; 
-	int x; 
+	int altitude ;
+	int x;
 	int y;
-	int	    prev ; 
-	int	    next ; 
-	int 	   isit ; 
+	int	    prev ;
+	int	    next ;
+	int 	   isit ;
 } BUF_POS;
 
 typedef struct cusink{

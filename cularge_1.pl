@@ -491,7 +491,7 @@ for $i (1 .. ($#nodeIdArr )) {
     print OUTFILE "c$capCount n$nodeIdArr[$i] 0 $totCap[$i]f\n";
     $capCount++;
 }
-print OUTFILE "r0 n0 n1 0\n";
+print OUTFILE "r0 n0 n9999 0\n";
 for $j (1 .. ($#wireFromArr )) {
     next if $wireWcArr[$j] eq "__segmented__";
     $from = $wireFromArr[$j];
@@ -515,7 +515,7 @@ for $j (1 .. ($#wireFromArr )) {
 #}
 
 print OUTFILE "x0 gin n0 vdd inv\n";
-print OUTFILE "x1 gin n0 vdd inv\n";
+#print OUTFILE "x1 gin n0 vdd inv\n";
 
 for $i (0 .. ($#bufFromArr )) {
     $bufCount++;
@@ -554,8 +554,7 @@ vdt gin 0 $vdd pwl(0n $sourceInitVolt, 0.2n $sourceInitVolt, 0.325n $sourceEndVo
 .ic v(gin)=$sourceInitVolt
 ";
 print OUTFILE ".ic v(n0) = 0\n";
-print OUTFILE ".ic v(n1) = 0\n";
-for $i (2 .. ($#nodeIdArr )) {
+for $i (1 .. ($#nodeIdArr )) {
     next if $nodeMergedTo[$i] ne "__none__";
     $nodeVolt = $sourceInitVolt;
     $nodeVolt = $sourceEndVolt if $isInv[$i];

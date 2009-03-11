@@ -1,0 +1,75 @@
+#include "ds.h"
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<math.h>
+#include<string.h>
+
+BOX frame	;
+SOURCE source  ;
+SINK sink	;
+WIRELIB wirelib;
+BUFLIB	buflib ;
+VDDLIB	vddlib ;
+int SlewLimit;
+int CapLimit ;
+int HIGHWAY;
+BLOCKAGE blockage;
+DME_NODE * source_node;
+double *init_delay_array;
+//int which_level;
+int mid_sink_num;
+int LAMBADA3;
+int num_node ;
+int num_buffer;
+int num_wire ;
+int num_sinknode ;
+int num_total_nodes ;
+int highway_extra_buf ;
+int free_buf_num;
+double level_length[20];
+int sink_array_num;
+int total_buf_num = 0 ;
+int main(int argc, char **argv){
+	FILE *ifp;
+	FILE *ofp;
+	FILE *figfp;
+	BUF_NODE ** OBUF;
+	DME_TREE_NODE * OT ;
+	DME_TREE_NODE ** OTmap ;
+
+	if(argc > 4){
+		printf("error: command inputfile\n");
+		exit(1);
+	}
+	ifp = fopen( argv[1], "r") ;
+	ofp = fopen(argv[2], "w") ;
+
+	InputFile(ifp);
+	preprocess_block(&blockage);
+
+	init_delay_array = (double *) malloc (sizeof(double)*sink.num);
+// 	printf("%d\n",InputFile(ifp));
+/*	check_input();
+	exit(0);*/
+	int i;
+	for(i=0;i<20;i++) level_length[i]=0;
+//	which_level = 0;
+//	deferred_merge_embedding(TRUE);
+//	printf("total length is %f\n", source_node->downstream_length);
+//	for(i=0;i<20;i++)
+//		printf("level %d is %f\n",i,level_length[i]);
+//	for(i=0;i<20;i++) level_length[i]=0;
+	deferred_merge_embedding(FALSE);
+	printf("total length is %f\n", source_node->downstream_length);
+	for(i=0;i<20;i++)
+		printf("level %d is %f\n",i,level_length[i]);
+
+ 	insert_buffer(source_node, &OBUF, &OT, &OTmap) ;
+	adjust_buf(OBUF, &blockage);
+	output_file (ofp ,OBUF, OT, OTmap) ;
+
+	return 1;
+}
+
+

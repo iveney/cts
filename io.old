@@ -19,7 +19,7 @@ extern int CapLimit ;
 extern BLOCKAGE blockage;
 
 
-extern double cap_left;
+
 extern int num_node ;
 extern int num_buffer;
 extern int num_wire ;
@@ -147,7 +147,7 @@ double d2 = 0.0;
 
 // vdd
 	fgets(buf,SMALL_BUF_SIZE,ifp);
-	sscanf(buf,"%s %s %d %lf",&(prefix1[0]),&(prefix2[0]),&x1,&d2);
+	sscanf(buf,"%s %s %d %lf",&prefix1,&prefix2,&x1,&d2);
 	d1 = (double)x1 ;
 	if ( strcmp(prefix1,"simulation")){
 		printf("Wrong simulation vdd: IO ERROR 10\n");
@@ -165,10 +165,10 @@ double d2 = 0.0;
 	vddlib.lib[1] = d2 ;
 
 	fgets(buf,SMALL_BUF_SIZE,ifp);
-	sscanf(buf,"%s %s %d",&(prefix1[0]),&(prefix2[0]),&x1);
+	sscanf(buf,"%s %s %d",&prefix1,&prefix2,&x1);
 	SlewLimit = x1;
 	fgets(buf,SMALL_BUF_SIZE,ifp);
-	sscanf(buf,"%s %s %d",&(prefix1[0]),&(prefix2[0]),&x1);
+	sscanf(buf,"%s %s %d",&prefix1,&prefix2,&x1);
 	CapLimit = x1;
 
 // blockage
@@ -375,7 +375,10 @@ int i;
 }
 
 
-void output_file(FILE *fp, BUF_NODE ** OBUF, DME_TREE_NODE * OT, DME_TREE_NODE ** OTmap,int label){
+
+
+
+void output_file(FILE *fp, BUF_NODE ** OBUF, DME_TREE_NODE * OT, DME_TREE_NODE ** OTmap, int label){
 	if ( fp ==  NULL) {
 		printf(" error input file name \n");
 		return ;
@@ -427,33 +430,25 @@ void fprint_sink(FILE *fp, DME_TREE_NODE * Troot){
 	fprint_sink(fp,Troot->rs);
 }
 
-void gen_inputfile(FILE * ifp,DME_TREE_NODE * Troot, DME_TREE_NODE ** map,int flag){
+void gen_inputfile(FILE * ifp,DME_TREE_NODE * Troot, DME_TREE_NODE ** map){
 int i;
 int x1,y1,x2,y2;
 	x1 = frame.ll.x ; 	y1 = frame.ll.y;
 	x2 = frame.ur.x ; 	y2 = frame.ur.y;
         fprintf(ifp,"%d %d %d %d\n", x1,y1,x2,y2);
         fprintf(ifp,"source %d %d %d %d\n",source.name,source.location.x,source.location.y,source.bufname);
-        if (flag == 0)
-			fprintf(ifp,"num sink %d\n",mid_sink_num);
-		else if (flag == 1)
-			fprintf(ifp,"num sink %d\n",num_sinknode);
-		fprint_sink(ifp,Troot);
+        fprintf(ifp,"num sink %d\n",mid_sink_num);
+	fprint_sink(ifp,Troot);
         fprintf(ifp,"num wirelib %d\n",wirelib.num);
         for(i = 0 ; i < wirelib.num; i++)
                 fprintf(ifp,"%d %f %f\n",wirelib.lib[i].wiretype,wirelib.lib[i].r,wirelib.lib[i].c);
         fprintf(ifp,"num buflib %d\n",buflib.num);
- //       for(i=0; i< buflib.num; i++)
-                 fprintf(ifp,"%d %s %d %f %f %f\n",buflib.lib[0].buf_id,buflib.lib[0].spice_subckt,buflib.lib[0].inverted,35.0,buflib.lib[0].ocap,buflib.lib[0].ores);
+//        for(i=0; i< buflib.num; i++)
+                fprintf(ifp,"%d %s %d %f %f %f\n",buflib.lib[0].buf_id,buflib.lib[0].spice_subckt,buflib.lib[0].inverted,35.0,buflib.lib[0].ocap,buflib.lib[0].ores);
                 fprintf(ifp,"%d %s %d %f %f %f\n",buflib.lib[1].buf_id,buflib.lib[1].spice_subckt,buflib.lib[1].inverted,4.2,buflib.lib[1].ocap,buflib.lib[1].ores);
-
         fprintf(ifp,"simulation vdd %.1f %.1f\n",vddlib.lib[0],vddlib.lib[1]);
         fprintf(ifp,"limit slew %d\n",SlewLimit);
-	if ( flag == 0)	
-        	fprintf(ifp,"limit cap %d\n",CapLimit);
-	else if(flag == 1)
-        	fprintf(ifp,"limit cap %d\n",(int)cap_left);
-		
+        fprintf(ifp,"limit cap %d\n",CapLimit);
         fprintf(ifp,"num blockage %d\n", 0);
 
 }

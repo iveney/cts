@@ -1,199 +1,17 @@
-#include "ds.h"
-
-#include<stdio.h>
-#include<stdlib.h>
-#include<math.h>
-#include<string.h>
-
-
-
-BOX frame	;
-SOURCE source  ;
-SINK sink	;
-WIRELIB wirelib;
-BUFLIB	buflib ;
-VDDLIB	vddlib ;
-int SlewLimit;
-double cap_left;
-int CapLimit ;
-int HIGHWAY;
-BLOCKAGE blockage;
-DME_NODE * source_node;
-double *init_delay_array;
-int which_level;
-int mid_sink_num;
-int LAMBADA3;
-int num_node ;
-int num_buffer;
-int num_wire ;
-int num_sinknode ;
-int num_total_nodes ;
-int highway_extra_buf ;
-int free_buf_num;
-double level_length[20];
-int sink_array_num;
-int total_buf_num = 0;
-int crt_num_node;
-int crt_num_wire;
-int crt_total_buf_num;
-int new_num_node;
-int new_num_wire;
-int new_total_buf_num;
-int new_num_total_nodes;
-DME_TREE_NODE * ZERO;
-int main(int argc, char **argv){
-	FILE *ifp;
-	FILE *ofp;
-	FILE *figfp;
-	BUF_NODE ** OBUF;
-	DME_TREE_NODE * OT ;
-	DME_TREE_NODE ** OTmap ;
-	DME_TREE_NODE * Store = (DME_TREE_NODE *) malloc(sizeof(DME_TREE_NODE));
-	DME_TREE_NODE * son ;
-	int remain_num_node;
-	int remain_num_wire;
-	int remain_total_buf_num;
-	int remain_num_total_nodes;
-	int remain_num_sinknode;
-	ZERO = (DME_TREE_NODE *) malloc(sizeof(DME_TREE_NODE));
-	if(argc > 4){
-		printf("error: command inputfile\n");
-		exit(1);
-	}
-	ifp = fopen( argv[1], "r") ;
-	ofp = fopen(argv[2], "w") ;
-
-	InputFile(ifp);
-	preprocess_block(&blockage);
-
-	init_delay_array = (double *) malloc (sizeof(double)*sink.num);
-/*	check_input();
-	exit(0);*/
-	int i;
-	deferred_merge_embedding(FALSE);
- 	insert_buffer(source_node, &OBUF, &OT, &OTmap) ;
-	trans_crt_path(OBUF,OT,OTmap );
-	printf("total buf num is %d\n",total_buf_num);
-	refine_crt_num(&crt_num_node,&crt_num_wire,&crt_total_buf_num,OBUF);
-	remain_num_node = num_node - crt_num_node ;
-	remain_num_wire = num_wire - crt_num_wire - 1;
-	remain_total_buf_num = total_buf_num - crt_total_buf_num;
-	remain_num_total_nodes = num_total_nodes - 2;
-	remain_num_sinknode = num_sinknode - 1;
-
-	num_node -= remain_num_node;
-	num_wire -= remain_num_wire;
-	total_buf_num -= remain_total_buf_num;
-	num_total_nodes -= remain_num_total_nodes;
-	num_sinknode -= remain_num_sinknode;
-
-	num_node -= crt_num_node;
-	num_wire -= crt_num_wire;
-	total_buf_num -= crt_total_buf_num;
-	printf("total buf num is %d\n",total_buf_num);
-	son = OT->ls;
-	while(son->is_blk == 1)
-		son = son -> ls;
-	Store->ls = son->ls;
-	Store->rs = son->rs;
-    son->ls = NULL;
-	son->rs = NULL;
-	son->is_sink = 1;
-	son->sink_index = 1;
-
-	printf("num sink node is %d\n", num_sinknode);
-	refine_crt_path(OBUF,OT,OTmap,crt_num_node,crt_num_wire,crt_total_buf_num);
-
-
-	num_node += remain_num_node;
-	num_wire += remain_num_wire;
-	total_buf_num += remain_total_buf_num;
-	num_total_nodes += remain_num_total_nodes;
-	num_sinknode += remain_num_sinknode;
-
-	son->ls = Store->ls;
-	son->rs = Store->rs;
-
-//	num_node += crt_num_node;
-//	num_wire += crt_num_wire;
-//	total_buf_num += crt_total_buf_num;
-	adjust_buf(OBUF,&blockage);
-	output_file (ofp ,OBUF, OT, OTmap,1) ;
-
-	return 1;
-}
-
-/*
-void add_buf_list(BUF_NODE * ol , BUF_NODE *ne){
-BUF_NODE * bi;
-	if (ne == NULL)
-		return;
-	bi = ol;
-	if (bi == NULL){
-		printf(" error: the newlist not exist\n");
-		exit(0);
-	}
-	while ( bi->next != NULL)
-		bi = bi->next;
-	bi->next = ne;
-}
-
-void adjust_node_id(DME_TREE_NODE * OT, int loss){
-     if ( OT == NULL )
-		 return;
-	 if (OT->node_id != 0)
-		 OT->node_id = OT->node_id - loss;
-	 adjust_node_id(OT->ls,loss);
-	 adjust_node_id(OT->rs,loss);
-}
-
-void trans_crt_path(BUF_NODE ** OBUF, DME_TREE_NODE * OT, DME_TREE_NODE ** OTmap){
-DME_TREE_NODE * seg = OT->ls;
-BUF_NODE * buflist , * newlist;
-BUF_NODE * bf,* bt;
-int i;
-int nodenum = 0;
-	if( seg -> is_blk != 1)
-		return;
-	newlist = (BUF_NODE *)malloc(sizeof(BUF_NODE));
-	newlist->next = NULL;
-	//bf = newlist;
-	while (seg != NULL){
-		add_buf_list(newlist , (*(OBUF+seg->node_id))->next);
-
-
-		if(seg->is_blk != 1){
-			(*(OBUF+seg->node_id))->next = newlist->next;
-			OT->ls = seg;
-			seg->fa = OT;
-			break;
-		}
-		nodenum ++;
-		seg = seg->ls ;
-	}
-	num_node -= nodenum;
-	num_wire -= nodenum;
-	num_total_nodes -= nodenum;
-	adjust_node_id(OT,nodenum);
-	printf("nodenum is %d\n",nodenum);
-	for(i=1;i<=num_total_nodes-1;i++){
-		(*(OBUF+i))->next = (*(OBUF+i+nodenum))->next;
-		(*(OTmap+i)) = (*(OTmap+i+nodenum));
-
-	}
-}
-
+#include"crt_path.h"
 
 
 void refine_crt_num(int * node, int * wire, int * buf, BUF_NODE ** OBUF){
 int i = 0;
 BUF_NODE * bf = (*(OBUF + 1))->next;
+*buf = 0;
 	while ( bf != NULL){
 		i++;
+		(*buf) += bf->units;
 		bf = bf->next;
 	}
 
-	*buf = i*6;
+//	*buf = i*6;
 	*node = 2 * i;
 	*wire = i ;
 }
@@ -227,8 +45,9 @@ void cpy_buf_list( BUF_NODE * L1, BUF_NODE * L2){
 	}
 }
 void refine_crt_path(BUF_NODE ** OBUF, DME_TREE_NODE * OT, DME_TREE_NODE ** OTmap, int n, int w, int bu){
+DME_TREE_NODE * lookson;
 DME_TREE_NODE * Vroot = OT;
-DME_TREE_NODE * Rroot = OT->ls ;
+DME_TREE_NODE * Rroot = OT->ls;
 DME_TREE_NODE * Oroot = (*OTmap);
 BUF_NODE * store;
 BUF_NODE * buflist;
@@ -249,10 +68,16 @@ int bnum;
 	ZERO->y = 0;
 	ZERO->sink_index = -1;
     ZERO->ls = ZERO->rs = NULL;
-	if( Rroot->node_id != 1){
+/*	if( Rroot->node_id != 1){
 		printf(" wrong, there is blk node this test \n");
 		exit(0);
 	}
+*/
+
+	lookson = OT->ls;
+	while(lookson->is_blk == 1)
+		lookson = lookson->ls;
+	Rroot = lookson;
 	buflist = (*(OBUF+Rroot->node_id))->next;
 	store = (BUF_NODE *) malloc(sizeof(BUF_NODE));
 	cpy_buf_list(store,buflist);
@@ -359,14 +184,15 @@ BUF_NODE * st = store;
 
 }
 
-decode(int bcode, int * btype, int *bnum){
+void decode(int bcode, int * btype, int *bnum){
 	if ( bcode < 0){
 		*btype = -1;
 		*bnum = -1;
 	}
 	else {
-		*bnum = bcode/2 + 2;
-		*btype = bcode %2 ;
+		*bnum = bcode ;
+//		*btype = bcode %2 ;
+		*btype = 0;
 	}
 }
 
@@ -488,7 +314,7 @@ Vroot->node_id = 0;
 	num_total_nodes+=new_num_total_nodes;
 	(*(OBUF+Rroot->node_id))->next = newbuf->next;
 	(*Tmap) = ZERO;
-	gen_inputfile(ifp,ZERO,Tmap);
+	gen_inputfile(ifp,ZERO,Tmap,1);
 	output_file(tfp,OBUF,ZERO,Tmap,0);
 	fclose(tfp);
 	fclose(ifp);
@@ -518,80 +344,63 @@ Vroot->node_id = 0;
 		*delay = tempqian;
 		return err;
 }
-*/
-/*
-double ngspice_segment_delay(int cap, int * li_path_seg, int * li_path_info, int len){
-SEG_LIST  * segl = (SEG_LIST *)malloc(sizeof(SEG_LIST));
-SEG_LIST  * sl = segl ;
-int i,adder,bufnum;
-int sink_dist, sink_cap ;
-FILE * ifp = fopen("temp.input","w");
-FILE * ofp = fopen("temp.output","w");
 
-
-if (segl == NULL){
-	printf("no space for seg_list any more\n");
-	return 0.0;
+void add_buf_list(BUF_NODE * ol , BUF_NODE *ne){
+BUF_NODE * bi;
+	if (ne == NULL)
+		return;
+	bi = ol;
+	if (bi == NULL){
+		printf(" error: the newlist not exist\n");
+		exit(0);
+	}
+	while ( bi->next != NULL)
+		bi = bi->next;
+	bi->next = ne;
 }
-	segl->next = NULL;
-	bufnum = 0;
-	sink_dist = 0 ;
-	adder = 2;
-	sink_cap = (int)cap ;
-	// gen_test file ()
-for ( i = len ; i >= 0 ; i--){
-	if ( sl == NULL ){
-		sl = (SEG_LIST *)malloc(sizeof(SEG_LIST));
-		if (sl==NULL){
-			printf(" sl is NULL \n");
-			exit(0);
+
+void adjust_node_id(DME_TREE_NODE * OT, int loss){
+     if ( OT == NULL )
+		 return;
+	 if (OT->node_id != 0)
+		 OT->node_id = OT->node_id - loss;
+	 adjust_node_id(OT->ls,loss);
+	 adjust_node_id(OT->rs,loss);
+}
+
+void trans_crt_path(BUF_NODE ** OBUF, DME_TREE_NODE * OT, DME_TREE_NODE ** OTmap){
+DME_TREE_NODE * seg = OT->ls;
+BUF_NODE * buflist , * newlist;
+BUF_NODE * bf,* bt;
+int i;
+int nodenum = 0;
+	if( seg -> is_blk != 1)
+		return;
+	newlist = (BUF_NODE *)malloc(sizeof(BUF_NODE));
+	newlist->next = NULL;
+	//bf = newlist;
+	while (seg != NULL){
+		add_buf_list(newlist , (*(OBUF+seg->node_id))->next);
+
+
+		if(seg->is_blk != 1){
+			(*(OBUF+seg->node_id))->next = newlist->next;
+			OT->ls = seg;
+			seg->fa = OT;
+			break;
 		}
+		nodenum ++;
+		seg = seg->ls ;
 	}
-		printf("i is %d\n",i);
-		printf(" num is %d\n", li_path_info[buinfo(i)]);
-		sl->isbuf = li_path_info[buinfo(i)];
-		sl->wire_t = li_path_info[wrinfo(i)];
-		sl->buf1 = (SEG_BUF *) malloc (sizeof(SEG_BUF));
-		if ( i == 0 && sl->isbuf == 0)
-			sl->buf1->name = 1 ;
-		else
-			sl->buf1->name = adder ++;
-		if ( i == len )
-			sink_dist += 1;
-		else
-			sink_dist += li_path_seg[i] ;
-		sl->buf1->x = sink_dist;
-		sl->buf1->y = 0 ;
-	    if ( sl->isbuf > 0){
-			bufnum ++ ;
-			sl->buf2 = (SEG_BUF *) malloc (sizeof(SEG_BUF));
-			if ( i > 0)
-				sl->buf2->name = adder ++ ;
-			else
-				sl->buf2->name = 1;
-			sl->buf2->x = sink_dist;
-			sl->buf2->y = 0 ;
-	}
+	num_node -= nodenum;
+	num_wire -= nodenum;
+	num_total_nodes -= nodenum;
+	adjust_node_id(OT,nodenum);
+	printf("nodenum is %d\n",nodenum);
+	for(i=1;i<=num_total_nodes-1;i++){
+		(*(OBUF+i))->next = (*(OBUF+i+nodenum))->next;
+		(*(OTmap+i)) = (*(OTmap+i+nodenum));
 
-	sl->first = sl->buf1->name;
-	if ( sl->isbuf > 0)
-		sl->last = sl->buf2->name;
-	else
-		sl->last = sl->first ;
-	if ( i > 0)
-		sl -> next = (SEG_LIST *)malloc(sizeof(SEG_LIST));
-	else
-		sl -> next = NULL;
-	sl = sl -> next ;
+	}
 }
 
-    printf(" wo can\n");
-	check_seg(segl);
-    gen_test_file(ifp,ofp,sink_dist,sink_cap,segl ,bufnum,len);
-
-	fclose(ifp);
-	fclose(ofp);
-
-
-}
-*/

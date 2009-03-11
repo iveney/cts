@@ -3,6 +3,6 @@
 #include "ds.h"
 
 int compute_distance(NODE *, NODE *);
-void compute_segment(NODE *, NODE *, BLOCKAGE *, int);
+int compute_segment(NODE *, NODE *, BLOCKAGE *, int, NODE, NODE);
 
 #endif

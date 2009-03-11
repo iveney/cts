@@ -1,0 +1,11 @@
+=== vdd 1.0
+  === clk src rising
+    sink 1 (1) latency 365.355 slew 19.881
+  === clk src falling
+    sink 1 (1) latency 366.810 slew 18.887
+=== vdd 1.2
+  === clk src rising
+    sink 1 (1) latency 357.766 slew 18.530
+  === clk src falling
+    sink 1 (1) latency 359.011 slew 18.092
+crtinfile crtoutfile CLR 9.044 (ps) C 7318.363 (fF)

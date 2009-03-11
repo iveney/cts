@@ -84,7 +84,7 @@ num sink 81
 81 8666080 8262130 35
 num wirelib 2
 0 0.0001 0.0002
-1 0.0003 0.00016
+1 0.0005 0.00036
 num buflib 2
 0 clkinv0.subckt 1 35 80 61.2
 1 clkinv1.subckt 1 4.2 6.1 440

@@ -20,7 +20,6 @@
 #define Absdist(x1,x2) ((x1)-(x2))>=0?((x1)-(x2)):((x2)-(x1))
 
 extern SINK sink ;
-extern int HIGHWAY;
 extern BLOCKAGE blockage;
 extern DME_NODE *source_node;
 extern BOX  frame ;
@@ -34,13 +33,13 @@ extern int num_wire ;
 extern int num_sinknode ;
 extern int num_total_nodes ;
 extern int total_buf_num;
-extern int LAMBADA3;
 
 
 int WIRETYPE = 0;
 int BUFTYPE = 0;
 int BUF_UNIT = 2;
 int realson = -1;
+
 
 static int buf_i   ;
 static int buf_a = 0;
@@ -90,15 +89,14 @@ int i, j ,n ;
 		(*Troot) -> buf_num = l ->buf_num ;
 		(*Troot) ->sink_index = l ->sink_index ;
 		(*Troot) ->is_blk = l ->blockage_node ;
-	//	(*Troot) ->delta_length_buf = l ->delta_length_buf ;
-		(*Troot) ->first_buf_fraction = l -> first_buf_fraction ;
+		(*Troot) ->delta_length_buf = l ->delta_length_buf ;
 		(*Troot) ->factor = l ->factor;
 		(*Troot) ->reduntant = l->reduntant ;
 		(*Troot) ->left = (*Troot)->right =  0;
 		(*Troot) ->ls = (*Troot) -> rs = NULL;
 		(*Troot) ->fa = father ;
 		(*Troot) ->is_fake = 0 ;
-		(*Troot) ->wire_type = l->wire_type;
+		(*Troot) ->wire_type = WIRETYPE;
 	}
 
 	add_DME_node(l -> pleft, &((*Troot)->ls),l->select_x,l->select_y,(*Troot)) ;
@@ -133,8 +131,7 @@ void construct_DME_tree(DME_NODE * l, int lnum, DME_TREE_NODE **Troot){
 	(*Troot) -> is_sink = l->sink_index;
 	(*Troot) ->sink_index = l ->sink_index ;
 	(*Troot) ->is_blk = l ->blockage_node ;
-//	(*Troot) ->delta_length_buf = l->delta_length_buf ;
-	(*Troot) -> first_buf_fraction = l ->first_buf_fraction ;
+	(*Troot) ->delta_length_buf = l->delta_length_buf ;
 	(*Troot) ->detour  = 0 ;
 	//(*Troot) ->factor = source_node ->factor;
 	(*Troot) ->ls = (*Troot) -> rs = NULL;
@@ -145,7 +142,7 @@ void construct_DME_tree(DME_NODE * l, int lnum, DME_TREE_NODE **Troot){
 	(*Troot) -> y = 0;
 	(*Troot) ->reduntant = 0 ;
 	(*Troot) ->is_fake = 0 ;
-	(*Troot) ->wire_type = l->wire_type;
+	(*Troot) ->wire_type = WIRETYPE;
 	add_DME_node(l->pleft,& ((*Troot)->ls), 0, 0,(*Troot));
 
 }
@@ -225,7 +222,7 @@ void construct_DME_map(DME_TREE_NODE * Troot, DME_TREE_NODE ** Tmap){
 	if ( Troot == NULL)
 		return ;
 	Troot -> node_id = icommap ;
-	//Troot -> wire_type = WIRETYPE;
+	Troot -> wire_type = WIRETYPE;
 	(*(Tmap+icommap)) = Troot ;
 	icommap ++ ;
 	if ( allnode < icommap ) allnode = icommap ;
@@ -278,8 +275,7 @@ int check_DME_tree(DME_TREE_NODE * Troot){
 //	if ( Troot->fa != NULL)
 //		printf(" father is %d\n", Troot->fa->node_id);
 //	printf(" altitude %d\n",Troot->altitude);
-//	printf(" node is %d\t",Troot->node_id);
-//	printf("left  %d\t",Troot->left_direction);
+//	printf("left  %d\n",Troot->left_direction);
 //	printf("righ %d\n",Troot->right_direction);
 //	printf("\n");
 
@@ -305,7 +301,7 @@ int check_DME_tree(DME_TREE_NODE * Troot){
 void check_sink_alt_array(double * sink_alt_array, int lnum){
 int i ;
 	for ( i = 0 ;i < lnum ; i++)
-		printf(" %f\t ", *(sink_alt_array+i) );
+		printf(" %d\t ", *(sink_alt_array+i) );
 	printf("\n");
 
 
@@ -416,7 +412,7 @@ int dubudu = 0;
 	if ( loopi == 0) {
 //printf(" step is %d\t delta is %d\n", stepv, (*(map+ibp->next))->delta_length_buf);
 // 		sleep(3);
-		stepv = (int)((double)stepv * (*(map+ibp->next))->first_buf_fraction ) ;
+		stepv = (stepv - (*(map+ibp->next))->delta_length_buf ) ;
 		lastnode = ibp->next;
 		if((*(map+lastnode))->duplicate_first_buf == 1 )
 			dubudu = 1;
@@ -617,7 +613,6 @@ int dubudu = 0;
 		ibm->y = y2;
 	}
 */
-	int wtype = (*(map+ibm->next))-> wire_type;
 	left = (*(map+ibm->next))->left ;
 	right = (*(map+ibm->next))->right;
 	buf_i ++ ;
@@ -631,7 +626,7 @@ int dubudu = 0;
 		bf->next->x = ibm->x;
 		bf->next->y = ibm->y;
 		bf->next->buf_id = buf_i ;
-		bf->next->wire_type = wtype;
+		bf->next->wire_type = WIRETYPE;
 		bf->next->buf_type = BUFTYPE;
 		bf->next->units = BUF_UNIT;
 		bf->next->next = NULL ;
@@ -644,7 +639,7 @@ int dubudu = 0;
 		bf->next->x = ibm->x;
 		bf->next->y = ibm->y;
 		bf->next->buf_id = buf_i ;
-		bf->next->wire_type = wtype;
+		bf->next->wire_type = WIRETYPE;
 		bf->next->buf_type = BUFTYPE;
 		bf->next->units = BUF_UNIT;
 		bf->next->next = bt;
@@ -789,6 +784,7 @@ void print_fig_3(DME_TREE_NODE *Troot , DME_TREE_NODE ** map){
 
 	putStack(Troot->node_id) ;
 	while ( (nd = popStack()) != -1){
+
 		t = (*(map+nd))->ls ;
 		if ( t != NULL) {
 			putStack( t->node_id);
@@ -948,7 +944,6 @@ int j;
 int minNode ;
 int Lmin ;
 int stepv;
-int wtype;
 BUF_POS bp ;
 BUF_POS bm ;
 BUF_POS bn ;
@@ -958,21 +953,13 @@ BUF_POS bn ;
 	bp.prev =  (*(DME_tree_map+nodei))->fa->node_id;
 	bp.next = (*(DME_tree_map+nodei))->node_id;
 	bp.isit = 1 ;
-	wtype = (*(DME_tree_map+nodei))->wire_type;
+
 	for (ii = 0 ; ii < K ; ii++){
 
-					if ( nodei <= realson)
+					if ( nodei == realson)
 						stepv = LAMBADA3;
-					else{
-						if ( wtype == 0)
-							stepv = LAMBADA_w1 ;
-						else if (wtype == 1)
-							stepv = LAMBADA_w2 ;
-						else{
-							printf("buffer_place type error\n");
-							exit(0);
-						}
-					}
+					else
+						stepv = LAMBADA ;
 					flag = find_one_buf_pos(ii, &bp,  Troot, DME_tree_map,&bm, stepv,factor) ;
 					if ( flag == 1 )
 						cpy_buf(&bp,&bm);
@@ -1011,11 +998,11 @@ int check_DME(DME_NODE * af) {
 	if(af->blockage_node == 0 && af->pleft != NULL){
 		DME_NODE *aa=af->pleft;
 		int length = Manhattan(af->select_x, af->select_y, aa->select_x, aa->select_y);
-//		printf("%d %d, (%d %d) %f. %d %d!! left\n",length, aa->detour, af->select_x, af->select_y,af->left_length,aa->select_x,aa->select_y);
+		printf("%d %d, (%d %d) %f. %d %d!! left\n",length, aa->detour, af->select_x, af->select_y,af->left_length,aa->select_x,aa->select_y);
 		while(aa->blockage_node == 1){
 			length += Manhattan(aa->select_x, aa->select_y, aa->pleft->select_x, aa->pleft->select_y);
 			aa = aa->pleft;
-//			printf("%d %d, %f!! left\n",length, aa->detour, af->left_length);
+			printf("%d %d, %f!! left\n",length, aa->detour, af->left_length);
 		}
 		if(ABS(length + aa->detour - af->left_length)>5){
 			printf("%d %d %d %d, %f shit!! left\n",af->select_x, af->select_y, aa->select_x, aa->select_y, af->left_length);
@@ -1051,7 +1038,7 @@ BUF_NODE * b ;
 	if (Troot->node_id != 0)
 		fprintf(fp, "%d %d %d \n", Troot->node_id, (int)Troot->x, (int)Troot->y);
 	if (Troot->ls != NULL){
-		if (Troot->ls->node_id >= LARGESTNODE)
+		if ( Troot->ls->node_id >= LARGESTNODE )
 			b = NULL;
 		else
 			b = (*(bufnode1 + Troot->ls->node_id))->next ;
@@ -1102,10 +1089,10 @@ BUF_NODE * b ;
 	if (Troot == NULL)
 		return ;
 
-
+//	printf("connectnode is %d\n",Troot->node_id);
 
 	if (Troot->ls != NULL){
-		if (Troot->ls->node_id >= LARGESTNODE)
+		if ( Troot->ls->node_id >= LARGESTNODE)
 			b = NULL;
 		else
 			b = (*(bufnode1 + Troot->ls->node_id))->next ;
@@ -1157,7 +1144,7 @@ int i,j;
 	highway_extra_buf = 0 ;
 //	printf("duplicate\n");
 	for ( i = 1; i < lnum ; i++){
-		if ((*(bufnode1 + i)) == NULL) continue;
+		if ((*(bufnode1+i))==NULL) continue;
 		b = (*(bufnode1 + i))->next ;
 
 		while ( b != NULL){
@@ -1194,11 +1181,10 @@ void cpy_dme_tree_node(DME_TREE_NODE * d1, DME_TREE_NODE * d2, int mode){
 	d1 -> delay = d2->delay;
 	d1-> left_direction = d2->left_direction ;
 	d1 -> right_direction = d2 ->right_direction;
-	d1 -> wire_type = d2->wire_type;
+
 	d1 -> is_sink = d2 -> is_sink ;
 	d1 -> buf_num = d2 ->buf_num ;
-//	d1 ->delta_length_buf = d2 ->delta_length_buf ;
-	d1 ->first_buf_fraction = d2 -> first_buf_fraction;
+	d1 ->delta_length_buf = d2 ->delta_length_buf ;
 	d1 ->factor = d2 ->factor;
 	d1 ->reduntant = d2->reduntant ;
 	d1 ->fa = d2->fa;
@@ -1219,7 +1205,7 @@ void cpy_dme_tree_node(DME_TREE_NODE * d1, DME_TREE_NODE * d2, int mode){
 
 }
 
-DME_TREE_NODE * stream_down(DME_TREE_NODE * tg, DME_TREE_NODE * src ,int * num ,int flag,int wtype){
+DME_TREE_NODE * stream_down(DME_TREE_NODE * tg, DME_TREE_NODE * src ,int * num ,int flag ){
 DME_TREE_NODE * temp ;
 int loop  = 0;
 	if ( src == NULL){
@@ -1242,7 +1228,6 @@ int loop  = 0;
 			tg = tg->ls;
 			src = src -> rs;
 			cpy_dme_tree_node(tg,src,-1);
-			tg -> wire_type = wtype ;
 			tg ->is_blk = 1;
 			tg->fa = temp ;
 			(*num) ++ ;
@@ -1254,7 +1239,6 @@ int loop  = 0;
 			tg = tg->ls;
 			src = src -> ls;
 			cpy_dme_tree_node(tg,src,-1);
-			tg -> wire_type = wtype ;
 			tg ->is_blk = 1;
 			tg->fa = temp ;
 			(*num) ++ ;
@@ -1267,7 +1251,7 @@ int loop  = 0;
 
 }
 
-DME_TREE_NODE * stream_up(DME_TREE_NODE * tg, DME_TREE_NODE * src , int  num, int flag,int wtype){
+DME_TREE_NODE * stream_up(DME_TREE_NODE * tg, DME_TREE_NODE * src , int  num, int flag ){
 DME_TREE_NODE * temp ;
 DIRECTION  moveon;
 	if ( src == NULL){
@@ -1333,7 +1317,6 @@ DIRECTION  moveon;
 		}
 
 		cpy_dme_tree_node(tg,src,-1);
-		tg -> wire_type = wtype ;
 		if ( flag == 1 && num == 1)
 			tg->left_direction = src->right_direction;
 		tg ->is_blk = 1;
@@ -1349,7 +1332,7 @@ DIRECTION  moveon;
 
 
 
-DME_TREE_NODE * stream_down_stop(DME_TREE_NODE * tg, DME_TREE_NODE * src, int length ,int * num, int flag,int wtype){
+DME_TREE_NODE * stream_down_stop(DME_TREE_NODE * tg, DME_TREE_NODE * src, int length ,int * num, int flag){
 DME_TREE_NODE * temp ;
 DIRECTION moveon;
 int time = 0 ;
@@ -1378,7 +1361,6 @@ int x1, y1 , x2, y2 ;
 			else
 				src = src ->ls;
 			cpy_dme_tree_node(tg,src,-1);
-			tg -> wire_type = wtype ;
 			tg ->is_blk = 1;
 			tg->fa = temp ;
 			if ( time == 0)
@@ -1405,7 +1387,6 @@ int x1, y1 , x2, y2 ;
 			temp = tg ;
 			tg -> ls = (DME_TREE_NODE *) malloc( sizeof(DME_TREE_NODE));
 			tg = tg->ls ;
-			tg -> wire_type = wtype ;
 			tg -> ls = NULL ;
 			tg -> rs = NULL;
 			tg -> is_blk = 1 ;
@@ -1482,7 +1463,6 @@ int x1, y1 , x2, y2 ;
 			src = src -> ls;
 			cpy_dme_tree_node(tg,src,-1);
 			tg ->is_blk = 1;
-			tg -> wire_type = wtype ;
 			tg->fa = temp ;
 			src = src->ls ;
 			tour -= src->altitude ;
@@ -1496,7 +1476,6 @@ int x1, y1 , x2, y2 ;
 		temp = tg ;
 		tg -> ls = (DME_TREE_NODE *) malloc( sizeof(DME_TREE_NODE));
 		tg = tg->ls ;
-		tg -> wire_type = wtype ;
 		tg -> ls = NULL ;
 		tg -> rs = NULL;
 		tg -> is_blk = 1 ;
@@ -1572,7 +1551,6 @@ int i,round;
 int tour ;
 int round_num = 0 ;
 int lrson = 0 ;
-int wtype;
 DME_TREE_NODE * di ;
 DME_TREE_NODE * ofa ;
 DME_TREE_NODE * nfa = (DME_TREE_NODE *) malloc(sizeof(DME_TREE_NODE));
@@ -1586,7 +1564,6 @@ int altitude1, altitude2,delta;
 	if ( Troot->is_blk != 1 && Troot->fa != NULL){
 		lrson = 0 ;
 		tour = Troot->detour ;
-		wtype = Troot->wire_type;
 		ofa = Troot ;
 		if (tour > 0){
 			do {
@@ -1599,13 +1576,16 @@ int altitude1, altitude2,delta;
 			cpy_dme_tree_node( nfa, ofa, -1) ;
 			altitude1 = ofa->altitude ;
 			altitude2 = Troot->altitude ;
+//			printf(" altitude 1 is %d\n", altitude1);
+//			printf(" altitude 2 is %d\n", altitude2);
 			delta = altitude2-altitude1;
 			di = nfa;
+//			printf(" round is %d\n",tour/(2*delta));
 			if ( (round = (tour/(2*delta))) > 0){
 				for ( i = 1; i <= round ; i++){
 						round_num = 0 ;
-						di = stream_down(di,ofa,&round_num,lrson,wtype);
-						di = stream_up(di ,Troot,round_num,lrson,wtype);
+						di = stream_down(di,ofa,&round_num,lrson);
+						di = stream_up(di ,Troot,round_num,lrson);
 				}
 
 				tour -= (round * delta *2 );
@@ -1620,11 +1600,11 @@ int altitude1, altitude2,delta;
 //			printf(" tour is %d\n",tour);
 			if ( tour > 0){
 				round_num = 0 ;
-				di = stream_down_stop(di,ofa,tour,&round_num,lrson,wtype);
+				di = stream_down_stop(di,ofa,tour,&round_num,lrson);
 				if (round > 0)
-					di = stream_up(di,di ,round_num,0,wtype);
+					di = stream_up(di,di ,round_num,0);
 				else
-					di = stream_up(di,di ,round_num,lrson,wtype);
+					di = stream_up(di,di ,round_num,lrson);
 			}
 
 
@@ -1672,7 +1652,7 @@ DME_TREE_NODE * Tr = NULL ;
 double max_path  = 0 ;
 BUF_NODE * bf;
 DME_TREE_NODE ** DME_tree_map1 ;
-DME_TREE_NODE *look;
+DME_TREE_NODE * look;
 		total_buf_num = 0;
 		num_buffer = 0;
 		highway_extra_buf = 0;
@@ -1738,8 +1718,8 @@ DME_TREE_NODE *look;
 		for ( i = 1 ; i < allnode ; i++){
 			if (  !((*(DME_tree_map1+i))-> is_blk)	) {
 				K = (*(DME_tree_map1+i))->buf_num ;
-				if ( i<=realson)
-					BUF_UNIT = HIGHWAY;
+				if ( i==1)
+					BUF_UNIT = 6;
 				else
 					BUF_UNIT = 2;
 

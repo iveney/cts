@@ -49,7 +49,8 @@ int compute_distance(NODE *p1, NODE *p2){
 	return (p2->x - p1->x); 
 }
 
-void compute_segment(NODE *p1, NODE *p2, BLOCKAGE *blockage_list, int blockage_number){
+int compute_segment(NODE *p1, NODE *p2, BLOCKAGE *blockage_list, int blockage_number, NODE A, NODE B){
+	//printf("ll here: %d %d %d %d\n",p1->x,p1->y,p2->x,p2->y);
 	NODE *p3;
 	NODE *adjacent_list;
 	int intersection_blockage;
@@ -60,7 +61,15 @@ void compute_segment(NODE *p1, NODE *p2, BLOCKAGE *blockage_list, int blockage_n
 	int flag = 0;
 	int direction;
 	int first_not_in = 0;
+	int l_h_max,l_h_min,l_v_value;
+	int r_h_max,r_h_min,r_v_value;
+	int max_y,min_y;
+	int l_x,l_y,r_x,r_y;
+//	NODE A, B;
 
+	if((p1->x == p2->x) &&(p1->y == p2->y))
+		return 0;
+	
 	//make sure that p1 is on the left of p2
 	if (p1->x > p2->x){
 		p3 = (NODE *) malloc (sizeof(NODE));
@@ -71,9 +80,35 @@ void compute_segment(NODE *p1, NODE *p2, BLOCKAGE *blockage_list, int blockage_n
 		first_not_in = 1;
 	}
 
+	
+
 	if(p2 ->y > p1->y ) direction =1;
 	else direction = -1;
-    p2->y = (p2->x - p1->x) * direction + (p1->y);	
+	if(first_not_in == 0)
+		p2->y = (p2->x - p1->x) * direction + (p1->y);
+	else 
+		p1->y = p2->y - (p2->x - p1->x) * direction;
+	
+	//initial the value of l and r
+	/*if(direction == 1){
+		max_y = p2->y;
+		min_y = p1->y;
+		l_h_max = p1->y;
+		r_h_max = p1->y;
+		l_h_min = p2->y;
+		r_h_min = p2->y;
+	}
+	else{
+		max_y = p1->y;
+		min_y = p2->y;
+		l_h_max = p2->y;
+		r_h_max = p2->y;
+		l_h_min = p1->y;
+		r_h_min = p1->y;
+	}
+	l_v_value = p1->x;
+	r_v_value = p2->x;*/
+
 	//printf("before %d %d %d %d\n", p1->x, p1->y, p2->x, p2->y);
 
 	for (i = 0; i < blockage_number; i++){
@@ -160,6 +195,19 @@ void compute_segment(NODE *p1, NODE *p2, BLOCKAGE *blockage_list, int blockage_n
 				printf("direction is %d\n",direction);*/
 				p3 = (NODE *) malloc(sizeof(NODE));
 				if(direction == -1){
+					p3->y = blockage_list->pool[i].ur.y;
+					p3->x = (p3->y - p1->y) * direction + p1->x;
+				}
+				else{
+					p3->y = blockage_list->pool[i].ll.y;
+					p3->x = (p3->y - p1->y) * direction + p1->x;
+				}
+
+				if(p3->x < blockage_list->pool[i].ll.x){
+					p3->x = blockage_list->pool[i].ll.x;
+					p3->y = (p3->x - p1->x) * direction + p1->y; 
+				}
+				/*if(direction == -1){
 					if(p1->x >= blockage_list->pool[i].ll.x){
 						if((p1->y <= blockage_list->pool[i].ur.y)){
 							(*p3) = (*p1);
@@ -226,6 +274,7 @@ void compute_segment(NODE *p1, NODE *p2, BLOCKAGE *blockage_list, int blockage_n
 					}
 
 				}
+				*/
 				(*p2) = (*p3);
 				free(p3);
 //				p2 = p3;
@@ -241,8 +290,27 @@ void compute_segment(NODE *p1, NODE *p2, BLOCKAGE *blockage_list, int blockage_n
 //		return;
 	}
 	
-	if(((*p2).x == (*p1).x) && ((*p2).y == (*p1).y)) return;
-	
+	if(((*p2).x == (*p1).x) && ((*p2).y == (*p1).y)) return 0;
+
+	if(direction == 1){
+		max_y = p2->y;
+		min_y = p1->y;
+		l_h_max = p1->y;
+		r_h_max = p1->y;
+		l_h_min = p2->y;
+		r_h_min = p2->y;
+	}
+	else{
+		max_y = p1->y;
+		min_y = p2->y;
+		l_h_max = p2->y;
+		r_h_max = p2->y;
+		l_h_min = p1->y;
+		r_h_min = p1->y;
+	}
+	l_v_value = p1->x;
+	r_v_value = p2->x;
+	//printf("gugu is %d %d %d %d %d %d\n",l_h_max,l_h_min,r_h_max,r_h_min,l_v_value,r_v_value);	
 
 	//printf("huhu %d, %d, %d, %d\n",p1->x,p1->y,p2->x,p2->y);
 
@@ -257,10 +325,6 @@ void compute_segment(NODE *p1, NODE *p2, BLOCKAGE *blockage_list, int blockage_n
 			(blockage_list->pool[i].ur.x - blockage_list->pool[i].ll.x <= Length_Limit))
 			continue;
 
-		if (blockage_list->pool[i].ll.x >= (p2->x))
-			continue;
-		if (blockage_list->pool[i].ur.x  <= (p1->x))
-			continue;
 		if(direction == 1){
 			if(blockage_list->pool[i].ll.y >= (p2->y))
 				continue;
@@ -272,6 +336,63 @@ void compute_segment(NODE *p1, NODE *p2, BLOCKAGE *blockage_list, int blockage_n
 				continue;
 			if(blockage_list->pool[i].ur.y <= (p2->y))
 				continue;
+		}
+		if (blockage_list->pool[i].ll.x >= (p2->x)){
+			if(blockage_list->pool[i].ur.x <= B.x){
+				if((blockage_list->pool[i].ll.y < min_y) &&
+						(blockage_list->pool[i].ur.y > min_y) &&
+						(blockage_list->pool[i].ur.y <= max_y)){
+					if(r_h_max < blockage_list->pool[i].ur.y)
+						r_h_max = blockage_list->pool[i].ur.y;
+					if(r_h_min > blockage_list->pool[i].ur.y)
+						r_h_min = blockage_list->pool[i].ur.y;
+				}
+				else if((blockage_list->pool[i].ll.y >=min_y) &&
+						(blockage_list->pool[i].ur.y <= max_y)){
+					if(r_h_max < blockage_list->pool[i].ur.y)
+						r_h_max = blockage_list->pool[i].ur.y;
+					if(r_h_min > blockage_list->pool[i].ll.y)
+						r_h_min = blockage_list->pool[i].ll.y;
+				}
+				else if((blockage_list->pool[i].ll.y >= min_y) &&
+						(blockage_list->pool[i].ll.y < max_y) &&
+						(blockage_list->pool[i].ur.y > max_y)){
+					if(r_h_max < blockage_list->pool[i].ll.y)
+						r_h_max = blockage_list->pool[i].ll.y;
+					if(r_h_min > blockage_list->pool[i].ll.y)
+						r_h_min = blockage_list->pool[i].ll.y;
+				}
+			}
+			continue;
+		}
+		if (blockage_list->pool[i].ur.x  <= (p1->x)){
+			if(blockage_list->pool[i].ll.x >= A.x){
+				if((blockage_list->pool[i].ll.y < min_y) &&
+						(blockage_list->pool[i].ur.y > min_y)&&
+						(blockage_list->pool[i].ur.y <=max_y)){
+					if(l_h_max < blockage_list->pool[i].ur.y)
+						l_h_max = blockage_list->pool[i].ur.y;
+					if(l_h_min > blockage_list->pool[i].ur.y)
+						l_h_min = blockage_list->pool[i].ur.y;
+				}
+				else if((blockage_list->pool[i].ll.y >= min_y) &&
+						(blockage_list->pool[i].ur.y <= max_y)){
+					if(l_h_max < blockage_list->pool[i].ur.y)
+						l_h_max = blockage_list->pool[i].ur.y;
+					if(l_h_min > blockage_list->pool[i].ll.y)
+						l_h_min = blockage_list->pool[i].ll.y;
+				}
+				else if((blockage_list->pool[i].ll.y >= min_y) &&
+						(blockage_list->pool[i].ll.y < max_y) &&
+						(blockage_list->pool[i].ur.y > max_y)){
+					if(l_h_max < blockage_list->pool[i].ll.y)
+						l_h_max = blockage_list->pool[i].ll.y;
+					if(l_h_min > blockage_list->pool[i].ll.y)
+						l_h_min = blockage_list->pool[i].ll.y;
+				}
+			}
+			
+			continue;
 		}
 		//printf("haha\n");
 		
@@ -288,8 +409,18 @@ void compute_segment(NODE *p1, NODE *p2, BLOCKAGE *blockage_list, int blockage_n
 					p3->x = blockage_list->pool[i].ll.x;
 					p3->y = (p3->x - p1->x) * direction + p1->y;
 	
-					if(p3->y >= blockage_list->pool[i].ur.y)
+					if(p3->y >= blockage_list->pool[i].ur.y){
+						if(r_h_max < blockage_list->pool[i].ur.y){
+							r_h_max = blockage_list->pool[i].ur.y;
+						}
+						if(r_h_min > blockage_list->pool[i].ur.y){
+							r_h_min = blockage_list->pool[i].ur.y;
+						}
+						if(r_v_value > blockage_list->pool[i].ll.x){
+							r_v_value = blockage_list->pool[i].ll.x;
+						}
 						continue;
+					}
 					adjacent_list[2*intersection_blockage] = (*p3);
 				}
 			}
@@ -302,8 +433,24 @@ void compute_segment(NODE *p1, NODE *p2, BLOCKAGE *blockage_list, int blockage_n
 					p3->y = blockage_list->pool[i].ll.y;
 					p3->x = (p3->y - p1->y) * direction + p1->x;
 	
-					if(p3->x >= blockage_list->pool[i].ur.x)
+					if(p3->x >= blockage_list->pool[i].ur.x){
+						if(p2->y >= blockage_list->pool[i].ur.y){
+							if(l_h_max < blockage_list->pool[i].ur.y)
+								l_h_max = blockage_list->pool[i].ur.y;
+							if(l_h_min > blockage_list->pool[i].ll.y)
+								l_h_min = blockage_list->pool[i].ll.y;
+
+						}
+						else{
+							if(l_h_max < blockage_list->pool[i].ll.y)
+								l_h_max = blockage_list->pool[i].ll.y;
+							if(l_h_min > blockage_list->pool[i].ll.y)
+								l_h_min = blockage_list->pool[i].ll.y;
+						}
+						if(l_v_value < blockage_list->pool[i].ur.x)
+							l_v_value = blockage_list->pool[i].ur.x;
 						continue;
+					}
 					adjacent_list[2*intersection_blockage] = (*p3);
 				}
 			}
@@ -311,16 +458,39 @@ void compute_segment(NODE *p1, NODE *p2, BLOCKAGE *blockage_list, int blockage_n
 				p3->x = blockage_list->pool[i].ll.x;
 				p3->y = (p3->x - p1->x) * direction + p1->y;
 
-				if(p3->y >= blockage_list->pool[i].ur.y)
+				if(p3->y >= blockage_list->pool[i].ur.y){
+					if(r_h_max < blockage_list->pool[i].ur.y)
+						r_h_max = blockage_list->pool[i].ur.y;
+					if(r_h_min > blockage_list->pool[i].ll.y)
+						r_h_min = blockage_list->pool[i].ll.y;
+					if(r_v_value > blockage_list->pool[i].ll.x)
+						r_v_value = blockage_list->pool[i].ll.x;
 					continue;
+				}
 				else if (p3->y >= blockage_list->pool[i].ll.y)
 					adjacent_list[2*intersection_blockage] = (*p3);
 				else{
 					p3->y = blockage_list->pool[i].ll.y;
 					p3->x = (p3->y - p1->y) * direction + p1->x;
 
-					if(p3->x >= blockage_list->pool[i].ur.x)
+					if(p3->x >= blockage_list->pool[i].ur.x){
+						if(p2->y >= blockage_list->pool[i].ur.y){
+							if(l_h_max < blockage_list->pool[i].ur.y)
+								l_h_max = blockage_list->pool[i].ur.y;
+							if(l_h_min > blockage_list->pool[i].ll.y)
+								l_h_min = blockage_list->pool[i].ll.y;
+						}
+						else{
+							if(l_h_max < blockage_list->pool[i].ll.y)
+								l_h_max = blockage_list->pool[i].ll.y;
+							if(l_h_min > blockage_list->pool[i].ll.y)
+								l_h_min = blockage_list->pool[i].ll.y;
+						}
+						if(l_v_value < blockage_list->pool[i].ur.x)
+							l_v_value = blockage_list->pool[i].ur.x;
+
 						continue;
+					}
 					else{
 						adjacent_list[2*intersection_blockage] = (*p3);
 					}
@@ -353,8 +523,23 @@ void compute_segment(NODE *p1, NODE *p2, BLOCKAGE *blockage_list, int blockage_n
 					p3->y = blockage_list->pool[i].ur.y;
 					p3->x = (p3->y - p1->y) * direction + p1->x;
 	
-					if(p3->x >= blockage_list->pool[i].ur.x)
+					if(p3->x >= blockage_list->pool[i].ur.x){
+						if(p2->y <= blockage_list->pool[i].ll.y){
+							if(l_h_max < blockage_list->pool[i].ur.y)
+								l_h_max = blockage_list->pool[i].ur.y;
+							if(l_h_min > blockage_list->pool[i].ll.y)
+								l_h_min = blockage_list->pool[i].ll.y;
+						}
+						else{
+							if(l_h_max < blockage_list->pool[i].ur.y)
+								l_h_max = blockage_list->pool[i].ur.y;
+							if(l_h_min > blockage_list->pool[i].ur.y)
+								l_h_min = blockage_list->pool[i].ur.y;
+						}
+						if(l_v_value < blockage_list->pool[i].ur.x)
+							l_v_value = blockage_list->pool[i].ur.x;
 						continue;
+					}
 					adjacent_list[2*intersection_blockage] = (*p3);
 				}	
 			}
@@ -367,8 +552,15 @@ void compute_segment(NODE *p1, NODE *p2, BLOCKAGE *blockage_list, int blockage_n
 					p3->x = blockage_list->pool[i].ll.x;
 					p3->y = (p3->x - p1->x) * direction + p1->y;
 	
-					if(p3->y <= blockage_list->pool[i].ll.y)
+					if(p3->y <= blockage_list->pool[i].ll.y){
+						if(r_h_max < blockage_list->pool[i].ll.y)
+							r_h_max = blockage_list->pool[i].ll.y;
+						if(r_h_min > blockage_list->pool[i].ll.y)
+							r_h_min = blockage_list->pool[i].ll.y;
+						if(r_v_value > blockage_list->pool[i].ll.x)
+							r_v_value = blockage_list->pool[i].ll.x;
 						continue;
+					}
 					adjacent_list[2*intersection_blockage] = (*p3);
 				}
 			}
@@ -376,16 +568,39 @@ void compute_segment(NODE *p1, NODE *p2, BLOCKAGE *blockage_list, int blockage_n
 				p3->x = blockage_list->pool[i].ll.x;
 				p3->y = (p3->x - p1->x) * direction + p1->y;
 
-				if(p3->y <= blockage_list->pool[i].ll.y)
+				if(p3->y <= blockage_list->pool[i].ll.y){
+					if(r_h_max < blockage_list->pool[i].ur.y)
+						r_h_max = blockage_list->pool[i].ur.y;
+					if(r_h_min > blockage_list->pool[i].ll.y)
+						r_h_min = blockage_list->pool[i].ll.y;
+					if(r_v_value > blockage_list->pool[i].ll.x)
+						r_v_value = blockage_list->pool[i].ll.x;
+
 					continue;
+				}
 				else if (p3->y <= blockage_list->pool[i].ur.y)
 					adjacent_list[2*intersection_blockage] = (*p3);
 				else{
 					p3->y = blockage_list->pool[i].ur.y;
 					p3->x = (p3->y - p1->y) * direction  + p1->x;
 
-					if(p3->x >= blockage_list->pool[i].ur.x)
+					if(p3->x >= blockage_list->pool[i].ur.x){
+						if(p2->y <= blockage_list->pool[i].ll.y){
+							if(l_h_max < blockage_list->pool[i].ur.y)
+								l_h_max = blockage_list->pool[i].ur.y;
+							if(l_h_min > blockage_list->pool[i].ll.y)
+								l_h_min = blockage_list->pool[i].ll.y;
+						}
+						else{
+							if(l_h_max < blockage_list->pool[i].ur.y)
+								l_h_max = blockage_list->pool[i].ur.y;
+							if(l_h_min > blockage_list->pool[i].ur.y)
+								l_h_min = blockage_list->pool[i].ur.y;
+						}
+						if(l_v_value < blockage_list->pool[i].ur.x)
+							l_v_value = blockage_list->pool[i].ur.x;
 						continue;
+					}
 					else{
 						adjacent_list[2*intersection_blockage] = (*p3);
 					}
@@ -411,8 +626,9 @@ void compute_segment(NODE *p1, NODE *p2, BLOCKAGE *blockage_list, int blockage_n
 	}
 
 	//printf("huhu %f, %f, %f, %f\n",p1->x,p1->y,p2->x,p2->y);
+	//printf("i am now is %d %d %d %d %d %d\n",l_h_max,l_h_min,r_h_max,r_h_min,l_v_value,r_v_value);	
 
-	if(intersection_blockage>0){
+	if(intersection_blockage>=0){
 
 		//finish finding the intersection NODE list
 		//sorting
@@ -434,10 +650,56 @@ void compute_segment(NODE *p1, NODE *p2, BLOCKAGE *blockage_list, int blockage_n
 
 		//compute the longest distance
 		if(first_not_in==0){
+			if(direction == 1){
+				l_y = l_h_min;
+				r_x = r_v_value;
+				l_x = (l_y - p1->y) * direction + p1->x;
+				r_y = (r_x - p1->x) * direction + p1->y;
+				//printf("titian %d %d %d %d\n",l_x,l_y,r_x,r_y);
+			}
+			else{
+				l_y = l_h_max;
+				r_x = r_v_value;
+				l_x = (l_y - p1->y) * direction + p1->x;
+				r_y = (r_x - p1->x) * direction + p1->y;
+			}
+			if(l_x > r_x){
+				l_x = r_x;
+				l_y = r_y;
+			}
+			if(((intersection_blockage > 0)&&(l_x < adjacent_list[0].x)) || (intersection_blockage == 0)){
+				adjacent_list[0].x = l_x;
+				adjacent_list[0].y = l_y;
+			}				
 			(*p2) = adjacent_list[0];
 		}
 		else if (first_not_in == 1){
-			(*p1) = adjacent_list[2*intersection_blockage-1];
+			if(direction == 1){
+				l_x = l_v_value;
+				r_y = r_h_max;
+				l_y = (l_x - p2->x) * direction + p2->y;
+				r_x = (r_y - p2->y) * direction + p2->x;
+			}
+			else{
+				l_x = l_v_value;
+				r_y = r_h_min;
+				l_y =(l_x - p2->x) * direction + p2->y;
+				r_x =(r_y - p2->y) * direction + p2->x;
+			}
+			if(l_x < r_x){
+				l_x = r_x;
+				l_y = r_y;
+			}
+			if((intersection_blockage >0 )&&(l_x > adjacent_list[2*intersection_blockage-1].x)){
+				adjacent_list[2*intersection_blockage-1].x = l_x;
+				adjacent_list[2*intersection_blockage-1].y = l_y;
+			}
+			if(intersection_blockage >0)
+				(*p1) = adjacent_list[2*intersection_blockage-1];
+			else{
+				(*p1).x = l_x;
+				(*p1).y = l_y;
+			}	
 		}
 /*
 		i = 0;
@@ -471,6 +733,7 @@ void compute_segment(NODE *p1, NODE *p2, BLOCKAGE *blockage_list, int blockage_n
 
 	free(p3);
 	free(adjacent_list);
+	return 0;
 	//printf("after %d %d %d %d\n", p1->x, p1->y, p2->x, p2->y);
 
 

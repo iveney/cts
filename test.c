@@ -83,7 +83,7 @@ int main(int argc, char * argv[]){
 
 	// start to test
 	preprocess_block(&blockage);
-	construct_g_all(&blockage,&frame,&sink);
+	construct_g_all(&blockage,&sink);
 
 	printf("H:\n");
 	for(i=0;i<hfbd_size;i++)
@@ -119,7 +119,6 @@ int main(int argc, char * argv[]){
 
 	// write results into file
 	for(i=static_num;i<g_size;i++){
-		if( !g_occupy[i] ) continue;
 		printf("node index = %d\n",i);
 		sprintf(buf,"tree_%d.fig",i-static_num);
 		printf("Writing %s...\n",buf);

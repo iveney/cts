@@ -8,6 +8,8 @@
 ###############################################################################
 # 
 # Logs:
+# 2009/03/08   bug fix: wrong .ic definition for SEG_NODE_*
+# 2009/03/03   bug fix: wrong sink idenfication, due to order of merge_neighbor_node invocation
 # 2009/02/24   bug fix: a very special case causes wrong sink idenfication
 # 2009/02/18   added a switch "-b" to ignore blockage violation
 # 2009/02/16   bug fix: ".print tran" cannot take more than 71 arguments
@@ -323,17 +325,30 @@ for $i (0 .. ($#nodeIdArr )) {
 for $i (0 .. ($#nodeIdArr )) {
     die "ERROR node $nodeIdArr[$i] is not connect to the clock network," if $isInv[$i] == -1;
     if ($nodeSsIdArr[$i] ne $ssIdArr[0] && $nodeSsIdArr[$i] ne "__internal__" ) { 
-     #   die "ERROR sinknode $nodeIdArr[$i] is inverted," if $isInv[$i] == 1;
+	    #die "ERROR sinknode $nodeIdArr[$i] is inverted," if $isInv[$i] == 1;
     }
 }
 
 ###############################################################################
-# Merge "zero-distance" nodes
+# Merge "zero-distance" pair of nodes
+# This step is to make sure there is no "0 ohm" wire in the SPICE file, which
+# is a necessary condition for SPICE simulation. 
+# Based on the same reason, no sink can be at the same location as the source
 #
 push @nodeMergedTo, ();
+# merge-to source/sink first (assume no sink is at exact same location as the source)
+# It is to make sure source/sink won't merge to internal nodes
 for $i (0 .. ($#nodeIdArr )) {
+    next if ($nodeSsIdArr[$i] eq "__internal__" );
     next if $nodeMergedTo[$i] ne "__none__";
     merge_neighbor_node($i,"no_orig");
+}
+# merge internal nodes later
+for $i (0 .. ($#nodeIdArr )) {
+    if ($nodeSsIdArr[$i] eq "__internal__" ) { 
+        next if $nodeMergedTo[$i] ne "__none__";
+        merge_neighbor_node($i,"no_orig");
+    }
 }
 debug_resultfile();
 debug_neighbor();
@@ -364,15 +379,17 @@ for $j (0 .. ($#wireFromArr )) {
     $yInc = 0 if $yDist < 1;
     $newX = $nodeXArr[$countFrom]; $newY = $nodeYArr[$countFrom];
     $wireWcArr[$j] = "__segmented__";
+    die "ERROR script internal bug," if $isInv[$countTo] != $isInv[$countFrom];
+    $segIsInv = $isInv[$countFrom];
     ########
     # add new nodes between "from" and "to"
     for $segCnt (1 .. $numSeg-1) {
         $newX += $xInc * $xSegLen; $newY += $yInc * $ySegLen; 
         $id = "SEG_NODE_".$nodeCount;
-        #DEBUG# print "id $id newX $newX newY $newY\n"; 
+        #DEBUG# print "id $id newX $newX newY $newY inv $segIsInv\n"; 
         push @nodeIdArr, $id;
         push @nodeSsIdArr, "__internal__";
-        push @nodeXArr, $newX; push @nodeYArr, $newY; push @nodeMergedTo, "__none__"; push @totCap, 0; push @isInv, -1;
+        push @nodeXArr, $newX; push @nodeYArr, $newY; push @nodeMergedTo, "__none__"; push @totCap, 0; push @isInv, $segIsInv;
         $CountFromNodeId{$id} = $nodeCount++;
         push @wireFromArr, $from;
         push @wireToArr, $id;
@@ -468,16 +485,15 @@ for $i (0 .. ($#bufLibIdArr )) {
 $capCount=2;
 $resCount=2;
 $bufCount=0;
-    print OUTFILE "c0 gin 0 0\n";
-    print OUTFILE "c1 n0 0 0\n";
+print OUTFILE "c0 gin 0 0\n";
+print OUTFILE "c1 n0 0 0\n";
 for $i (1 .. ($#nodeIdArr )) {
     next if $nodeMergedTo[$i] ne "__none__";
     print OUTFILE "c$capCount n$nodeIdArr[$i] 0 $totCap[$i]f\n";
     $capCount++;
 }
-
-    print OUTFILE "r0 gin n0 0\n";
-    print OUTFILE "r1 n0  n1 0\n";
+print OUTFILE "r0 gin n0 0\n";
+print OUTFILE "r1 n0 n1 0\n";
 for $j (1 .. ($#wireFromArr )) {
     next if $wireWcArr[$j] eq "__segmented__";
     $from = $wireFromArr[$j];
@@ -493,11 +509,11 @@ for $j (1 .. ($#wireFromArr )) {
     $resCount++;
 }
 #for $i (0 .. ($#nodeIdArr )) {
-#    if ($nodeSsIdArr[$i] eq $ssIdArr[0]) { 
-#        $i = $nodeMergedTo[$i] if $nodeMergedTo[$i] ne "__none__";
-#        print OUTFILE "x$bufCount gin n$nodeIdArr[$i] vdd $bufLibSubcktNameArr[$CountFromBufLibId{$srcBufId}]\n";
-#        last;
-#    }
+#   if ($nodeSsIdArr[$i] eq $ssIdArr[0]) { 
+#       $i = $nodeMergedTo[$i] if $nodeMergedTo[$i] ne "__none__";
+#       print OUTFILE "x$bufCount gin n$nodeIdArr[$i] vdd $bufLibSubcktNameArr[$CountFromBufLibId{$srcBufId}]\n";
+#       last;
+#   }
 #}
 for $i (0 .. ($#bufFromArr )) {
     $bufCount++;
@@ -640,7 +656,6 @@ for ($k=3; $k<$numDataSet; $k++) {
     } else {
         die "ERROR slew violation $slew[$k] at $label," if $slew[$k] > $SLEWLIMIT;
     }
-#    printf ("    sink %s (%s) latency %.3f slew %.3f\n", $label,$nodeSsIdArr[$CountFromNodeId{$label}],$d50[$k]-$d50[2],$slew[$k]) if ( $opt_v > 0 );
     if ( $sinkIsBeingMonitored{$label} ) {
         printf ("    sink %s (%s) latency %.3f slew %.3f\n", $label,$nodeSsIdArr[$CountFromNodeId{$label}],$d50[$k]-$d50[2],$slew[$k]) if ( $opt_v > 0 );
         $maxLatency = $d50[$k]-$d50[2] if $d50[$k]-$d50[2] > $maxLatency;
