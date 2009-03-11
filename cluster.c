@@ -5,7 +5,7 @@
 // Author : Xiao Zigang
 // Modifed: < Thu Mar  5 14:42:55 HKT 2009 >
 // ----------------------------------------------------------------//
-// Useage: 
+// Useage:
 // Use (preprocess_block) and (preprocess_sinks) first
 // and (construct_g_all)
 // then use (cluster_sink)s to generate polylines
@@ -15,6 +15,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "util.h"
 #include "ds.h"
 #include "cluster.h"
@@ -39,14 +40,14 @@ void cluster_sinks(BLOCKAGE * blockage,SINK * sink){
 	int length = 0;
 	int cap = 0;
 	int num = 0;
-	BOOL * used = (int*) malloc(sink->num * sizeof(int));
+	BOOL * used = (BOOL*) malloc(sink->num * sizeof(BOOL));
 	memset(used,FALSE,sizeof(sink->num * sizeof(int)));
 	for(i=0;i<sink->num;i++){
 		// for each sink, try to form a poly line GREEDILY
 		// note that in g, sink node starts from static_num
 		if(used[i]) continue;
 		used[i]=TRUE;
-		head = tail = i; 
+		head = tail = i;
 		length = 0;
 		cap = sink->pool[i].lc;
 		num=1;
@@ -58,16 +59,21 @@ void cluster_sinks(BLOCKAGE * blockage,SINK * sink){
 
 			// find a nearest neighbour in head side
 			for(j=0;j<sink_num;j++){
-				t=j+static_num;
 				s=head+static_num;
-				if( !used[j] && head!=j && 
+				t=j+static_num;
+				if( !used[j] && head!=j &&
 				     pairs[s][t] < min_dist ){
 					min_dist = pairs[s][t];
 					min_idx = j;
 					which = 'h';
 				}
+			}
+
+			// find a nearest neighbour in tail side
+			for(j=0;j<sink_num;j++){
 				s=tail+static_num;
-				if( !used[j] && tail!=j && 
+				t=j+static_num;
+				if( !used[j] && tail!=j &&
 				     pairs[s][t] < min_dist ) {
 					min_dist = pairs[s][t];
 					min_idx = j;
@@ -82,8 +88,8 @@ void cluster_sinks(BLOCKAGE * blockage,SINK * sink){
 				new_cap = (cap + sink->pool[min_idx].lc);
 			}
 			if( min_idx != -1 &&
-			    new_len <= MAX_LEN && 
-			    new_cap <= MAX_CAP && 
+			    new_len <= MAX_LEN &&
+			    new_cap <= MAX_CAP &&
 			    num +1  <= MAX_SINK ){
 				// update length cap num
 				length = new_len;
@@ -118,7 +124,7 @@ void cluster_sinks(BLOCKAGE * blockage,SINK * sink){
 				tail = min_idx;
 				break;
 			}
-		}while(1); 
+		}while(1);
 	}
 	free(used);
 	return;
@@ -146,3 +152,34 @@ void free_clusters(){
 	isHead=isTail=NULL;
 	link_info=NULL;
 }
+
+void store_sinks(SINK * sink,SINK * linked_sink){
+	int i;
+	/*
+	for(i=0;i<sink->num;i++){
+		printf("%d %d %d\n",i, sink->pool[i].x, sink->pool[i].y);
+	}
+	*/
+	SNODE * ns = (SNODE*) malloc(sizeof(SNODE)*sink->num);
+	int count=0;
+	for(i=0;i<link_num;i++){
+		int p = link_info[i].t;
+		ns[count] = sink->pool[p];
+		ns[count].lc = link_info[i].c;
+		//printf("%d %d %d\n",count, ns[count].x, ns[count].y);
+		count++;
+	}
+
+	linked_sink->pool = (SNODE*) malloc(sizeof(SNODE)*sink->num);
+	memcpy(linked_sink->pool,sink->pool,sizeof(SNODE)*sink->num);
+	linked_sink->num = sink->num;
+
+	memcpy(sink->pool,ns,sizeof(SNODE)*sink->num);
+	sink->num = count;
+	/*
+	for(i=0;i<sink->num;i++){
+		printf("%d %d %d\n",i, sink->pool[i].x, sink->pool[i].y);
+	}
+	*/
+}
+

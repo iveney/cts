@@ -59,10 +59,10 @@ BLOCKAGE *pBlock;
 BOOL **fbdnode;
 void setvseg(VSEG *v, UINT xx, UINT yy1, UINT yy2);
 void sethseg(HSEG *h, UINT yy, UINT xx1, UINT xx2);
-void construct_g_all(BLOCKAGE *blocks, SINK *sink);
+void construct_g_all(BLOCKAGE *blocks,BOX * frame, SINK *sink);
 BOOL pt_in_rect(NODE *node, BOX *b);
-int mark_forbidden(BLOCKAGE *block);
-int constructg(BLOCKAGE *block);
+int mark_forbidden(BLOCKAGE *block,BOX * );
+int constructg(BLOCKAGE *block,BOX * frame);
 void allocate_g(int size);
 void init_g(void);
 BOOL gen_block_node(BLOCKAGE *blockage);
@@ -95,4 +95,6 @@ void update_dist(BLOCKAGE *,int src);
 int zip_path(int);
 int sort_sinks(const void * l, const void *r);
 void preprocess_sinks(SINK * sink);
+void add_frame_forbid(BOX *);
+
 #endif

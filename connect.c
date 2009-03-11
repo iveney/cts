@@ -138,7 +138,7 @@ inline int hor_overlap(HSEG h1,HSEG h2){
 // functions
 
 // construct the whole graph with a list of blockages and sinks
-void construct_g_all(BLOCKAGE * blocks, SINK * sink){
+void construct_g_all(BLOCKAGE * blocks,BOX * frame, SINK * sink){
 	free_all();
 	// first construct the static part of graph(blockage corners)
 	pBlock = blocks;
@@ -146,11 +146,11 @@ void construct_g_all(BLOCKAGE * blocks, SINK * sink){
 	sink_num = sink->num;
 	static_num = block_num*4;
 	g_num = static_num;               // only have static_num nodes now
-	allocate_g(static_num+sink_num);  // allocate space for all
+	allocate_g(static_num+sink_num+2);  // allocate space for all(2 for extra space)
 	init_g();                         // initialize the elements
 	gen_block_node(blocks);           // generate a set of blockage corners
 	gen_segments(blocks);             // generate segments from blockages
-	constructg(blocks); 
+	constructg(blocks,frame); 
 
 	// now copy the sinks into g_node
 	copy_sink(sink);
@@ -191,7 +191,7 @@ BOOL pt_in_rect(NODE * node,BOX * b){
 // check the adjacency edges of blockages, mark it as forbidden
 // note that the cases are very complicated and the code should be 
 // modified carefully
-int mark_forbidden(BLOCKAGE * block){
+int mark_forbidden(BLOCKAGE * block,BOX * frame){
 	NODE *nodei,*nodej;
 	BOX * boxi,*boxj;
 	int b_i,b_j;
@@ -303,15 +303,33 @@ int mark_forbidden(BLOCKAGE * block){
 			}// end of share horizontal edge
 		}// end of for b_j
 	}//end of for b_i
+
+	// at last, add the boundary of board into list.
+	add_frame_forbid(frame);
 	return 0;
 }// end of mark_forbidden
+
+// add the boundary of board into forbidden list.
+void add_frame_forbid(BOX * frame){
+	int i;
+	for(i=0;i<v_size;i++){
+		if( vlist[i].x == frame->ll.x ||
+		    vlist[i].x == frame->ur.x )
+			vfbd[vfbd_size++]=vlist[i];
+	}
+	for(i=0;i<h_size;i++){
+		if( hlist[i].y == frame->ll.y ||
+		    hlist[i].y == frame->ur.y )
+			hfbd[hfbd_size++]=hlist[i];
+	}
+}
 
 // take a list of blockage, construct a graph for shortest path computation
 // REQUIRE: external storage g
 // list : pointer to BLOCKAGE
-int constructg(BLOCKAGE * block){
+int constructg(BLOCKAGE * block,BOX * frame){
 	// start to construct the graph 
-	mark_forbidden(block);
+	mark_forbidden(block,frame);
 	int b_i,b_j;
 	int cor_i,cor_j;
 	// for each corner of each blockage, 
@@ -735,7 +753,8 @@ int insertpt(NODE pt,int id){
 		if( i!=pt_idx && g_occupy[i] == TRUE &&
 		    use_corner[i] == TRUE ){
 			//printf("reaching:%d -> %d\n",pt_idx,i);
-			BOOL result = reach(pt,g_node[i],pt_idx,i);
+			//BOOL result;
+			reach(pt,g_node[i],pt_idx,i);
 			//printf("RESULT = %d\n",result);
 		}
 	}
@@ -902,16 +921,16 @@ void init_single_source(int src_idx){
 // i.e. the one which parents are source node
 int zip_path(int i){
 	if(disjoint_parent[i] == -1 ) return i;
-	else disjoint_parent[i]= zip_path(disjoint_parent[i]);
+	else return (disjoint_parent[i]= zip_path(disjoint_parent[i]));
 }
 
 // after calling dijkstra, need to update that node's 
 // symetric entry in floyd's distance matrix and parent matrix
 void update_dist(BLOCKAGE * list, int src){
 	// first calculate SSSP
-	dijkstra(&list,src);
+	dijkstra(list,src);
 	// update the pairs, parents;
-	int i,j;
+	int i;
 	for(i=0;i<g_size;i++){
 		pairs[src][i]=pairs[i][src]=shortest[i];
 		parents[src][i] = via[i];
